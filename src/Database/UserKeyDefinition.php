@@ -16,7 +16,7 @@ use Shopware\Core\System\User\UserDefinition;
 
 class UserKeyDefinition extends EntityDefinition
 {
-    public const ENTITY_NAME = 'widas_cidaas_open_auth_user_key';
+    public const ENTITY_NAME = 'widas_cidaas_extension_user_key';
 
     public function getEntityName(): string
     {

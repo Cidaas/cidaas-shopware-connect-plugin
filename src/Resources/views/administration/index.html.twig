@@ -1,0 +1,3 @@
+{% set widasCidaasExtensionParent %}{% include '@WidasCidaasExtension/administration/index-base.html.twig' %}{% endset %}
+{% set widasCidaasExtensionScript %}{% include '@WidasCidaasExtension/administration/index-js.html.twig' %}{% endset %}
+{{ widasCidaasExtensionParent|replace({'</body>': widasCidaasExtensionParent})|raw }}

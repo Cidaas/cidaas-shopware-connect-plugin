@@ -1,0 +1,17 @@
+{
+    "sw-profile-index": {
+        "titleWidasCidaasExtensionCard": "OAuth",
+        "widasCidaasExtension": {
+            "userKeys": {
+                "columns": {
+                    "provider": "Anbieter",
+                    "createdAt": "Verbunden am"
+                },
+                "actions": {
+                    "connect": "Verbinden",
+                    "revoke": "Verbindung trennen"
+                }
+            }
+        }
+    }
+}

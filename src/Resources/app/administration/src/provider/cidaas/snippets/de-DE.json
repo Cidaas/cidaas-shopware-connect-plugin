@@ -1,0 +1,15 @@
+{
+    "widasCidaasExtensionClient": {
+        "providers": {
+            "cidaas": "cidaas"
+        },
+        "providerFields": {
+            "cidaas": {
+                "additionalScopes": "Anwendungsberechtigungen",
+                "clientId": "Anwendungsschlüssel",
+                "clientSecret": "Anwendungsgehemnis",
+                "redirectUri": "Rücksende-URL"
+            }
+        }
+    }
+}

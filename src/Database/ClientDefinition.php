@@ -16,7 +16,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 
 class ClientDefinition extends EntityDefinition
 {
-    public const ENTITY_NAME = 'widas_cidaas_open_auth_client';
+    public const ENTITY_NAME = 'widas_cidaas_extension_client';
 
     public function getEntityName(): string
     {

@@ -1,0 +1,13 @@
+{% block sw_settings_content_card_slot_system %}
+    {% parent %}
+
+    {% block sw_settings_widas_cidaas_extension_client_item %}
+        <sw-settings-item id="sw-settings-widas-cidaas-extension-client"
+                          :label="$t('widas-cidaas-extension-client.module.title')"
+                          :to="{ name: 'widas.cidaas.extension.client.settings' }">
+            <template slot="icon">
+                <sw-icon name="default-action-log-in"></sw-icon>
+            </template>
+        </sw-settings-item>
+    {% endblock %}
+{% endblock %}

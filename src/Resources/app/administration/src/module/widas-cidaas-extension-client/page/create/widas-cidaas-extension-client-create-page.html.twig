@@ -1,0 +1,52 @@
+{% block widas_cidaas_extension_client_create_page %}
+    <sw-page
+        :showSmartBar="false"
+        :showSearchBar="false"
+        class="widas-cidaas-extension-client-create-page"
+    >
+        {% block widas_cidaas_extension_client_create_page_inner %}{% endblock %}
+
+        {% block widas_cidaas_extension_client_create_page_content %}
+            <template #content>
+                <template
+                    v-if="isLoading"
+                >
+                    {% block widas_cidaas_extension_client_create_page_content_loader %}
+                        <sw-loader></sw-loader>
+                    {% endblock %}
+                </template>
+                <template
+                    v-else
+                >
+                    {% block widas_cidaas_extension_client_create_page_content_providers %}
+                        <sw-card-view>
+                            {% block widas_cidaas_extension_client_create_page_content_providers_list %}
+                                <sw-card
+                                    v-for="provider of items"
+                                    :key="provider.key"
+                                    :title="provider.label"
+                                    :classes="provider.classes"
+                                    hero
+                                    large
+                                >
+                                    {% block widas_cidaas_extension_client_create_page_content_providers_list_item %}
+                                        {% block widas_cidaas_extension_client_create_page_content_providers_list_item_action %}
+                                            <sw-button
+                                                @click="createClient(provider)"
+                                                class="widas-cidaas-extension-client-create-page-providers-provider--action"
+                                                variant="ghost"
+                                                block
+                                            >
+                                                {{ provider.actionLabel }}
+                                            </sw-button>
+                                        {% endblock %}
+                                    {% endblock %}
+                                </sw-card>
+                            {% endblock %}
+                        </sw-card-view>
+                    {% endblock %}
+                </template>
+            </template>
+        {% endblock %}
+    </sw-page>
+{% endblock %}

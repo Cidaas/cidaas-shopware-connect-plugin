@@ -1,0 +1,65 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    bind:
+      Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface $clientsRepository: '@widas_cidaas_extension_client.repository'
+      Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface $loginsRepository: '@widas_cidaas_extension_login.repository'
+      Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface $userEmailsRepository: '@widas_cidaas_extension_user_email.repository'
+      Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface $userKeysRepository: '@widas_cidaas_extension_user_key.repository'
+      Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface $userTokensRepository: '@widas_cidaas_extension_user_token.repository'
+
+  _instanceof:
+    WidasCidaasExtension\Contract\ProviderInterface:
+      tags:
+        - 'widas_cidaas_extension.client_provider'
+    Symfony\Component\EventDispatcher\EventSubscriberInterface:
+      tags:
+        - 'kernel.event_subscriber'
+
+  WidasCidaasExtension\:
+    resource: '../../*'
+    exclude:
+      - '../../Database/*Collection.php'
+      - '../../Database/*Entity.php'
+      - '../../Exception/*'
+      - '../../Migration/*'
+      - '../../Resources/*'
+
+  WidasCidaasExtension\Database\ClientDefinition:
+    tags:
+      - { name: shopware.entity.definition , entity: 'widas_cidaas_extension_client' }
+  WidasCidaasExtension\Database\LoginDefinition:
+    tags:
+      - { name: shopware.entity.definition , entity: 'widas_cidaas_extension_login' }
+  WidasCidaasExtension\Database\UserEmailDefinition:
+    tags:
+      - { name: shopware.entity.definition , entity: 'widas_cidaas_extension_user_email' }
+  WidasCidaasExtension\Database\UserKeyDefinition:
+    tags:
+      - { name: shopware.entity.definition , entity: 'widas_cidaas_extension_user_key' }
+  WidasCidaasExtension\Database\UserTokenDefinition:
+    tags:
+      - { name: shopware.entity.definition , entity: 'widas_cidaas_extension_user_token' }
+
+  WidasCidaasExtension\Service\OpenAuth\OneTimeTokenClientRepository:
+    decorates: Shopware\Core\Framework\Api\OAuth\ClientRepository
+    arguments:
+      - '@WidasCidaasExtension\Service\OpenAuth\OneTimeTokenClientRepository.inner'
+  WidasCidaasExtension\OpenAuth\OneTimeTokenScopeRepository:
+    decorates: Shopware\Core\Framework\Api\OAuth\ScopeRepository
+    arguments:
+      - '@WidasCidaasExtension\OpenAuth\OneTimeTokenScopeRepository.inner'
+
+  WidasCidaasExtension\Subscriber\ApiAuthentication:
+    arguments:
+      - '@shopware.api.authorization_server'
+      - '@Shopware\Core\Framework\Api\OAuth\UserRepository'
+      - '@Shopware\Core\Framework\Api\OAuth\RefreshTokenRepository'
+
+  WidasCidaasExtension\Service\ProviderRepository:
+    arguments:
+      - !tagged_iterator widas_cidaas_extension.client_provider
+  WidasCidaasExtension\Service\UserResolver:
+    arguments:
+      - '@user.repository'
