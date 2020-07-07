@@ -110,7 +110,7 @@ class OpenAuthenticationFlow implements OpenAuthenticationFlowInterface
                 return [
                     'name' => $client->getName(),
                     'url' => $this->router->generate(
-                        'administration.administration.widas_cidaas_extension.admin_open_auth.remote_login',
+                        'administration.administration.widas.cidaas_extension.remote_login',
                         ['clientId' => $client->getId()],
                         UrlGeneratorInterface::ABSOLUTE_URL
                     ),

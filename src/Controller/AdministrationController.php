@@ -38,7 +38,7 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"GET"},
-     *     name="administration.widas_cidaas_extension.admin_open_auth.login",
+     *     name="administration.widas.cidaas_extension.login",
      *     path="/admin/open-auth/{clientId}/redirect,
      *     defaults={"auth_required" = false}
      * )
@@ -61,7 +61,7 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"GET"},
-     *     name="administration.widas_cidaas_extension.admin_open_auth.remote_login",
+     *     name="administration.widas.cidaas_extension.remote_login",
      *     path="/admin/open-auth/{clientId}/remote,
      *     defaults={"auth_required" = false}
      * )
@@ -77,7 +77,7 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"GET"},
-     *     name="administration.widas_cidaas_extension.admin_open_auth.routes",
+     *     name="administration.widas.cidaas_extension.routes",
      *     path="/admin/open-auth/routes",
      *     defaults={"auth_required" = false}
      * )
@@ -90,7 +90,7 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"GET"},
-     *     name="api.widas_cidaas_extension.admin_open_auth.remote_connect",
+     *     name="api.widas.cidaas_extension.remote_connect",
      *     path="/api/v{version}/_admin/open-auth/{clientId}/connect"
      * )
      */
@@ -107,8 +107,8 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"GET"},
-     *     name="api.widas_cidaas_extension.admin_open_auth.provider.list",
-     *     path="/api/v{version}/_action/widas_cidaas_extension_admin_open_auth_provider/list"
+     *     name="api.widas.cidaas_extension.provider.list",
+     *     path="/api/v{version}/_action/widas_cidaas_extension_provider/list"
      * )
      */
     public function providerList(ProviderRepositoryInterface $providerRepository): Response
@@ -121,8 +121,8 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"POST"},
-     *     name="api.widas_cidaas_extension.admin_open_auth.provider.factorize",
-     *     path="/api/v{version}/_action/widas_cidaas_extension_admin_open_auth_provider/factorize"
+     *     name="api.widas.cidaas_extension.provider.factorize",
+     *     path="/api/v{version}/_action/widas_cidaas_extension_provider/factorize"
      * )
      */
     public function createClient(

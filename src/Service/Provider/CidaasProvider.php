@@ -59,7 +59,7 @@ class CidaasProvider implements ProviderInterface
             'config' => [
                 'clientId' => '',
                 'clientSecret' => '',
-                'redirectUri' => $this->router->generate('administration.widas_cidaas_extension.admin_open_auth.login', [
+                'redirectUri' => $this->router->generate('administration.widas.cidaas_extension.login', [
                     'clientId' => $clientId,
                 ], UrlGeneratorInterface::ABSOLUTE_URL),
                 'scopes' => [],

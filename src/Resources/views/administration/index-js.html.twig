@@ -5,7 +5,7 @@
     }
 </style>
 <script>
-    const clientRoutes = {{ url('administration.widas_cidaas_extension.admin_open_auth.routes')|json_encode|raw }};
+    const clientRoutes = {{ url('administration.widas.cidaas_extension.routes')|json_encode|raw }};
 
     const waitForLoginForm = function() {
         if (!document.querySelector('.sw-login')) {
@@ -43,7 +43,7 @@
         const token = match[1];
 
         httpClient.post('/oauth/token', {
-            grant_type: 'widas_cidaas_extension_admin_open_auth_one_time_token',
+            grant_type: 'widas_cidaas_extension_one_time_token',
             client_id: 'administration',
             scopes: 'write',
             one_time_token: token
