@@ -39,7 +39,7 @@ class AdministrationController extends AbstractController
      * @Route(
      *     methods={"GET"},
      *     name="administration.widas.cidaas_extension.login",
-     *     path="/admin/open-auth/{clientId}/redirect,
+     *     path="/admin/open-auth/{clientId}/redirect",
      *     defaults={"auth_required" = false}
      * )
      */
@@ -62,7 +62,7 @@ class AdministrationController extends AbstractController
      * @Route(
      *     methods={"GET"},
      *     name="administration.widas.cidaas_extension.remote_login",
-     *     path="/admin/open-auth/{clientId}/remote,
+     *     path="/admin/open-auth/{clientId}/remote",
      *     defaults={"auth_required" = false}
      * )
      */
