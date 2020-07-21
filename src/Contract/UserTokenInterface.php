@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Contract;
+namespace Cidaas\OpenAuth\Contract;
 
+use Cidaas\OpenAuth\Database\UserTokenEntity;
+use Cidaas\OpenAuth\Struct\TokenPairStruct;
 use Shopware\Core\Framework\Context;
-use WidasCidaasExtension\Database\UserTokenEntity;
-use WidasCidaasExtension\Struct\TokenPairStruct;
 
 interface UserTokenInterface
 {

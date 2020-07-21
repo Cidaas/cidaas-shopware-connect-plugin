@@ -1,0 +1,78 @@
+{% block cidaas_open_auth_scope_field %}
+    <div class="cidaas-open-auth-scope-field">
+        {% block cidaas_open_auth_scope_field_confirm %}
+            <sw-confirm-field
+                v-bind="exceptInput($attrs)"
+                v-on="exceptInput($listeners)"
+                :preventEmptySubmit="true"
+                @input="addItem"
+                ref="confirmField"
+            ></sw-confirm-field>
+        {% endblock %}
+
+        {% block cidaas_open_auth_scope_field_default_scopes_grid %}
+            <sw-grid
+                :header="false"
+                :selectable="false"
+                :table="true"
+                :items="defaultScopeItems">
+                {% block cidaas_open_auth_scope_field_default_scopes_grid_inner %}
+                {% endblock %}
+
+                <template slot="columns" slot-scope="{ item }">
+                    {% block cidaas_open_auth_scope_field_default_scopes_grid_columns %}
+                        {% block cidaas_open_auth_scope_field_default_scopes_grid_columns_name %}
+                            <sw-grid-column>
+                                {{ item.name }}
+                            </sw-grid-column>
+                        {% endblock %}
+                    {% endblock %}
+                </template>
+            </sw-grid>
+        {% endblock %}
+
+        {% block cidaas_open_auth_scope_field_items_grid %}
+            <sw-grid
+                :header="false"
+                :selectable="false"
+                :table="true"
+                :items="innerValue">
+                {% block cidaas_open_auth_scope_field_items_grid_inner %}
+                {% endblock %}
+
+                <template slot="columns" slot-scope="{ item }">
+                    {% block cidaas_open_auth_scope_field_items_grid_columns %}
+                        {% block cidaas_open_auth_scope_field_items_grid_columns_name %}
+                            <sw-grid-column
+                                flex="1fr"
+                            >
+                                {{ item.name }}
+                            </sw-grid-column>
+                        {% endblock %}
+
+                        {% block cidaas_open_auth_scope_field_items_grid_columns_actions %}
+                            <sw-grid-column
+                                align="right"
+                                flex="auto"
+                            >
+                                {% block cidaas_open_auth_scope_field_items_grid_columns_actions_remove %}
+                                    <sw-button
+                                        @click="removeItem(item.name)"
+                                        size="x-small"
+                                        variant="danger"
+                                        square
+                                    >
+                                        <sw-icon
+                                            name="small-default-x-line-small"
+                                            small
+                                        ></sw-icon>
+                                    </sw-button>
+                                {% endblock %}
+                            </sw-grid-column>
+                        {% endblock %}
+                    {% endblock %}
+                </template>
+            </sw-grid>
+        {% endblock %}
+    </div>
+{% endblock %}

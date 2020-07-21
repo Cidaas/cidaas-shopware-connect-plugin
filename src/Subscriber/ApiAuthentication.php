@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Subscriber;
+namespace Cidaas\OpenAuth\Subscriber;
 
-use WidasCidaasExtension\Component\OpenAuth\OneTimeTokenGrant;
-use WidasCidaasExtension\Contract\LoginInterface;
+use Cidaas\OpenAuth\Component\OpenAuth\OneTimeTokenGrant;
+use Cidaas\OpenAuth\Contract\LoginInterface;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
 use League\OAuth2\Server\Repositories\UserRepositoryInterface;

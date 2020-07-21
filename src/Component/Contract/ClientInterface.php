@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Component\Contract;
+namespace Cidaas\OpenAuth\Component\Contract;
 
-use League\OAuth2\Client\Provider\AbstractProvider;
-use WidasCidaasExtension\Struct\TokenPairStruct;
-use WidasCidaasExtension\Struct\UserStruct;
+use Cidaas\OpenAuth\Struct\TokenPairStruct;
+use Cidaas\OpenAuth\Struct\UserStruct;
+use Cidaas\OpenAuth\OAuth2\Client\Provider\AbstractProvider;
 
 interface ClientInterface
 {

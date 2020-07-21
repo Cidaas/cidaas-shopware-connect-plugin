@@ -1,7 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Component\Contract;
-
+namespace Cidaas\OpenAuth\Component\Contract;
 
 use League\OAuth2\Client\Tool\RequestFactory;
 

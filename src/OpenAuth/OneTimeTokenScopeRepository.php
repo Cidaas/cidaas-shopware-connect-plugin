@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\OpenAuth;
+namespace Cidaas\OpenAuth\OpenAuth;
 
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
@@ -24,7 +24,7 @@ class OneTimeTokenScopeRepository implements ScopeRepositoryInterface
 
     public function finalizeScopes(array $scopes, $grantType, ClientEntityInterface $clientEntity, $userIdentifier = null)
     {
-        if ($grantType === 'widas_cidaas_extension_one_time_token') {
+        if ($grantType === 'cidaas_open_auth_one_time_token') {
             $grantType = 'password';
         }
 

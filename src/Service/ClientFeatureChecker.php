@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service;
+namespace Cidaas\OpenAuth\Service;
 
+use Cidaas\OpenAuth\Contract\ClientFeatureCheckerInterface;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use WidasCidaasExtension\Contract\ClientFeatureCheckerInterface;
 
 class ClientFeatureChecker implements ClientFeatureCheckerInterface
 {

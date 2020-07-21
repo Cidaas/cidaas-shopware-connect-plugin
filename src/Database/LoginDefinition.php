@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Database;
+namespace Cidaas\OpenAuth\Database;
 
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\CreatedAtField;
@@ -15,7 +15,7 @@ use Shopware\Core\System\User\UserDefinition;
 
 class LoginDefinition extends EntityDefinition
 {
-    public const ENTITY_NAME = 'widas_cidaas_extension_login';
+    public const ENTITY_NAME = 'cidaas_open_auth_login';
 
     public function getEntityName(): string
     {

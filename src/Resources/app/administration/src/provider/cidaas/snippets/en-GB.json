@@ -1,5 +1,5 @@
 {
-    "widasCidaasExtensionClient": {
+    "cidaasOpenAuthClient": {
         "providers": {
             "cidaas": "cidaas"
         },

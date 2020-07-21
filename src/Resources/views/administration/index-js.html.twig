@@ -1,11 +1,15 @@
 <style>
-    .widas-cidas-extension--button {
+    .cidaas-open-auth--button {
         text-align: center;
         margin-top: 20px;
     }
+    
+    .sw-button.sw-button--ghost:focus {
+        background-color: #e3f3ff;
+    }
 </style>
 <script>
-    const clientRoutes = {{ url('administration.widas.cidaas_extension.routes')|json_encode|raw }};
+    const clientRoutes = {{ url('administration.cidaas.open_auth.routes')|json_encode|raw }};
 
     const waitForLoginForm = function() {
         if (!document.querySelector('.sw-login')) {
@@ -25,7 +29,7 @@
                         'sw-button',
                         'sw-button--block',
                         'sw-button--ghost',
-                        'widas-cidas-extension--button'
+                        'cidaas-open-auth--button'
                     );
                     link.href = item.url;
                     link.innerHTML = item.name;
@@ -43,7 +47,7 @@
         const token = match[1];
 
         httpClient.post('/oauth/token', {
-            grant_type: 'widas_cidaas_extension_one_time_token',
+            grant_type: 'cidaas_open_auth_one_time_token',
             client_id: 'administration',
             scopes: 'write',
             one_time_token: token

@@ -1,0 +1,104 @@
+{% block cidaas_open_auth_client_listing_page %}
+    <sw-page class="cidaas-open-auth-client-listing-page">
+        {% block cidaas_open_auth_client_listing_page_inner %}
+        {% endblock %}
+
+        {% block cidaas_open_auth_client_listing_page_search_bar %}
+            <template #search-bar>
+                <sw-search-bar
+                    :initialSearch="term"
+                    @search="onSearch"
+                    initialSearchType="cidaas_open_auth_client"
+                ></sw-search-bar>
+            </template>
+        {% endblock %}
+
+        {% block cidaas_open_auth_client_listing_page_search_bar_actions %}
+            <template #smart-bar-actions>
+                <sw-button
+                    :routerLink="{ name: 'cidaas.open.auth.client.create' }"
+                    variant="primary"
+                >
+                    {{ $t('cidaas-open-auth-client.pages.listing.actions.create') }}
+                </sw-button>
+            </template>
+        {% endblock %}
+
+        {% block cidaas_open_auth_client_listing_page_content %}
+            <template #content>
+                {% block cidaas_open_auth_client_listing_page_content_entity_listing %}
+                    <sw-entity-listing
+                        v-if="items"
+                        :items="items"
+                        :repository="clientRepository"
+                        :showSelection="false"
+                        :columns="columns"
+                        :isLoading="!isLoading"
+                        :showActions="false"
+                    >
+                        {% block cidaas_open_auth_client_listing_page_content_entity_listing_inner %}
+                        {% endblock %}
+
+                        {% block cidaas_open_auth_client_listing_page_content_entity_listing_columns_active %}
+                            <template #column-active="{ item }">
+                                <sw-icon
+                                    :color="getLoginColor(item)"
+                                    name="default-action-log-in"
+                                    small
+                                ></sw-icon>
+                                <sw-icon
+                                    :color="getConnectColor(item)"
+                                    name="default-action-share"
+                                    small
+                                ></sw-icon>
+                            </template>
+                        {% endblock %}
+
+                        {% block cidaas_open_auth_client_listing_page_content_entity_listing_columns_created_at %}
+                            <template #column-createdAt="{ item }">
+                                {{ item.createdAt | date({ hour: '2-digit', minute: '2-digit' }) }}
+                            </template>
+                        {% endblock %}
+
+                        {% block cidaas_open_auth_client_listing_page_content_entity_listing_columns_provider %}
+                            <template #column-provider="{ item }">
+                                {{ $te('cidaasOpenAuthClient.providers.' + item.provider) ? $t('cidaasOpenAuthClient.providers.' + item.provider) : item.provider }}
+                            </template>
+                        {% endblock %}
+
+                        {% block cidaas_open_auth_client_listing_page_content_entity_listing_pagination %}
+                            <template #pagination>
+                                <sw-pagination
+                                    :page="page"
+                                    :limit="limit"
+                                    :total="total"
+                                    :total-visible="7"
+                                    @page-change="onPageChange"
+                                ></sw-pagination>
+                            </template>
+                        {% endblock %}
+                    </sw-entity-listing>
+                {% endblock %}
+            </template>
+        {% endblock %}
+
+        {% block cidaas_open_auth_client_listing_page_sidebar_container %}
+            <template #sidebar>
+                {% block cidaas_open_auth_client_listing_page_sidebar %}
+                    <sw-sidebar>
+                        {% block cidaas_open_auth_client_listing_page_sidebar_inner %}
+                        {% endblock %}
+
+                        {% block cidaas_open_auth_client_listing_page_sidebar_refresh %}
+                            <sw-sidebar-item
+                                :title="$tc('cidaas-open-auth-client.pages.listing.actions.refresh')"
+                                @click="onRefresh"
+                                icon="default-arrow-360-left"
+                            ></sw-sidebar-item>
+                        {% endblock %}
+                    </sw-sidebar>
+                {% endblock %}
+            </template>
+        {% endblock %}
+    </sw-page>
+{% endblock %}

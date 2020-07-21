@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Exception;
+namespace Cidaas\OpenAuth\Exception;
 
 use Throwable;
 

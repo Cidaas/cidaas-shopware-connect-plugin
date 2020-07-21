@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service;
+namespace Cidaas\OpenAuth\Service;
 
+use Cidaas\OpenAuth\Component\AuthorizedHttpClient;
+use Cidaas\OpenAuth\Component\Contract\AuthorizedHttpClientInterface;
+use Cidaas\OpenAuth\Contract\AuthorizedHttpClientFactoryInterface;
+use Cidaas\OpenAuth\Contract\ClientLoaderInterface;
+use Cidaas\OpenAuth\Contract\TokenRefresherInterface;
 use Shopware\Core\Framework\Context;
-use WidasCidaasExtension\Component\AuthorizedHttpClient;
-use WidasCidaasExtension\Component\Contract\AuthorizedHttpClientInterface;
-use WidasCidaasExtension\Contract\AuthorizedHttpClientFactoryInterface;
-use WidasCidaasExtension\Contract\ClientLoaderInterface;
-use WidasCidaasExtension\Contract\TokenRefresherInterface;
 
 class AuthorizedHttpClientFactory implements AuthorizedHttpClientFactoryInterface
 {

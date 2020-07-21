@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Database;
+namespace Cidaas\OpenAuth\Database;
 
 use Shopware\Core\Framework\DataAbstractionLayer\EntityCollection;
 

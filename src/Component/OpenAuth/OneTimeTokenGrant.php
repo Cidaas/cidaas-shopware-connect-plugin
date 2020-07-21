@@ -1,7 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Component\OpenAuth;
+namespace Cidaas\OpenAuth\Component\OpenAuth;
 
+use Cidaas\OpenAuth\Contract\LoginInterface;
+use Cidaas\OpenAuth\Database\LoginEntity;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Entities\UserEntityInterface;
 use League\OAuth2\Server\Exception\OAuthServerException;
@@ -12,9 +14,6 @@ use League\OAuth2\Server\RequestEvent;
 use Psr\Http\Message\ServerRequestInterface;
 use Shopware\Core\Framework\Api\OAuth\User\User;
 use Shopware\Core\Framework\Context;
-use WidasCidaasExtension\Contract\LoginInterface;
-use WidasCidaasExtension\Database\LoginEntity;
-
 
 class OneTimeTokenGrant extends PasswordGrant
 {
@@ -23,15 +22,18 @@ class OneTimeTokenGrant extends PasswordGrant
      */
     private $login;
 
-    public function __construct(UserRepositoryInterface $userRepository, RefreshTokenRepositoryInterface $refreshTokenRepository, LoginInterface $login)
-    {
+    public function __construct(
+        UserRepositoryInterface $userRepository,
+        RefreshTokenRepositoryInterface $refreshTokenRepository,
+        LoginInterface $login
+    ) {
         parent::__construct($userRepository, $refreshTokenRepository);
         $this->login = $login;
     }
 
     public function getIdentifier()
     {
-        return 'widas_cidaas_extension_one_time_token';
+        return 'cidaas_open_auth_one_time_token';
     }
 
     protected function validateUser(ServerRequestInterface $request, ClientEntityInterface $client)

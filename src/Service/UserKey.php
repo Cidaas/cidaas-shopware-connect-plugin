@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service;
+namespace Cidaas\OpenAuth\Service;
 
-use WidasCidaasExtension\Contract\UserKeyInterface;
-use WidasCidaasExtension\Database\UserKeyCollection;
+use Cidaas\OpenAuth\Contract\UserKeyInterface;
+use Cidaas\OpenAuth\Database\UserKeyCollection;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;

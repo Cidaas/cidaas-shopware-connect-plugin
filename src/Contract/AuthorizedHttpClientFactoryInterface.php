@@ -1,10 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Contract;
+namespace Cidaas\OpenAuth\Contract;
 
-
+use Cidaas\OpenAuth\Component\Contract\AuthorizedHttpClientInterface;
 use Shopware\Core\Framework\Context;
-use WidasCidaasExtension\Component\Contract\AuthorizedHttpClientInterface;
 
 interface AuthorizedHttpClientFactoryInterface
 {

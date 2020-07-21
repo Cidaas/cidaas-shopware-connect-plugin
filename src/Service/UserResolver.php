@@ -1,14 +1,14 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service;
+namespace Cidaas\OpenAuth\Service;
 
-use WidasCidaasExtension\Contract\ClientFeatureCheckerInterface;
-use WidasCidaasExtension\Contract\LoginInterface;
-use WidasCidaasExtension\Contract\UserEmailInterface;
-use WidasCidaasExtension\Contract\UserKeyInterface;
-use WidasCidaasExtension\Contract\UserResolverInterface;
-use WidasCidaasExtension\Contract\UserTokenInterface;
-use WidasCidaasExtension\Struct\UserStruct;
+use Cidaas\OpenAuth\Contract\ClientFeatureCheckerInterface;
+use Cidaas\OpenAuth\Contract\LoginInterface;
+use Cidaas\OpenAuth\Contract\UserEmailInterface;
+use Cidaas\OpenAuth\Contract\UserKeyInterface;
+use Cidaas\OpenAuth\Contract\UserResolverInterface;
+use Cidaas\OpenAuth\Contract\UserTokenInterface;
+use Cidaas\OpenAuth\Struct\UserStruct;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;

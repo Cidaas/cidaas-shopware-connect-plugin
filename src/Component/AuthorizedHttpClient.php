@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Component;
+namespace Cidaas\OpenAuth\Component;
 
 use GuzzleHttp\ClientInterface;
-use League\OAuth2\Client\Provider\AbstractProvider;
+use Cidaas\OpenAuth\Component\Contract\AuthorizedHttpClientInterface;
+use Cidaas\OpenAuth\Contract\TokenRefresherInterface;
+use Cidaas\OpenAuth\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Tool\RequestFactory;
 use Shopware\Core\Framework\Context;
-use WidasCidaasExtension\Component\Contract\AuthorizedHttpClientInterface;
-use WidasCidaasExtension\Contract\TokenRefresherInterface;
 
 class AuthorizedHttpClient implements AuthorizedHttpClientInterface
 {
@@ -46,10 +46,9 @@ class AuthorizedHttpClient implements AuthorizedHttpClientInterface
         TokenRefresherInterface $tokenRefresher,
         Context $context,
         string $clientId,
-        string  $userId,
+        string $userId,
         int $secondsValid
-    )
-    {
+    ) {
         $this->oauthProvider = $oauthProvider;
         $this->tokenRefresher = $tokenRefresher;
         $this->context = $context;

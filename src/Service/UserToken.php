@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service;
+namespace Cidaas\OpenAuth\Service;
 
-use WidasCidaasExtension\Contract\UserTokenInterface;
-use WidasCidaasExtension\Database\UserTokenCollection;
-use WidasCidaasExtension\Database\UserTokenEntity;
-use WidasCidaasExtension\Struct\TokenPairStruct;
+use Cidaas\OpenAuth\Contract\UserTokenInterface;
+use Cidaas\OpenAuth\Database\UserTokenCollection;
+use Cidaas\OpenAuth\Database\UserTokenEntity;
+use Cidaas\OpenAuth\Struct\TokenPairStruct;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;

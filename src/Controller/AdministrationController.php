@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Controller;
+namespace Cidaas\OpenAuth\Controller;
 
-use WidasCidaasExtension\Contract\ClientLoaderInterface;
-use WidasCidaasExtension\Contract\OpenAuthenticationFlowInterface;
-use WidasCidaasExtension\Contract\ProviderRepositoryInterface;
-use WidasCidaasExtension\Database\ClientDefinition;
+use Cidaas\OpenAuth\Contract\ClientLoaderInterface;
+use Cidaas\OpenAuth\Contract\OpenAuthenticationFlowInterface;
+use Cidaas\OpenAuth\Contract\ProviderRepositoryInterface;
+use Cidaas\OpenAuth\Database\ClientDefinition;
 use Shopware\Core\Framework\Api\Context\AdminApiSource;
 use Shopware\Core\Framework\Api\Response\ResponseFactoryInterface;
 use Shopware\Core\Framework\Context;
@@ -29,7 +29,7 @@ class AdministrationController extends AbstractController
      * @var OpenAuthenticationFlowInterface
      */
     private $flow;
-    
+
     public function __construct(OpenAuthenticationFlowInterface $flow)
     {
         $this->flow = $flow;
@@ -38,7 +38,7 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"GET"},
-     *     name="administration.widas.cidaas_extension.login",
+     *     name="administration.cidaas.open_auth.login",
      *     path="/admin/open-auth/{clientId}/redirect",
      *     defaults={"auth_required" = false}
      * )
@@ -61,7 +61,7 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"GET"},
-     *     name="administration.widas.cidaas_extension.remote_login",
+     *     name="administration.cidaas.open_auth.remote_login",
      *     path="/admin/open-auth/{clientId}/remote",
      *     defaults={"auth_required" = false}
      * )
@@ -77,7 +77,7 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"GET"},
-     *     name="administration.widas.cidaas_extension.routes",
+     *     name="administration.cidaas.open_auth.routes",
      *     path="/admin/open-auth/routes",
      *     defaults={"auth_required" = false}
      * )
@@ -90,7 +90,7 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"GET"},
-     *     name="api.widas.cidaas_extension.remote_connect",
+     *     name="api.cidaas.open_auth.remote_connect",
      *     path="/api/v{version}/_admin/open-auth/{clientId}/connect"
      * )
      */
@@ -107,8 +107,8 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"GET"},
-     *     name="api.widas.cidaas_extension.provider.list",
-     *     path="/api/v{version}/_action/widas_cidaas_extension_provider/list"
+     *     name="api.cidaas.open_auth.provider.list",
+     *     path="/api/v{version}/_action/cidaas_open_auth_provider/list"
      * )
      */
     public function providerList(ProviderRepositoryInterface $providerRepository): Response
@@ -121,8 +121,8 @@ class AdministrationController extends AbstractController
     /**
      * @Route(
      *     methods={"POST"},
-     *     name="api.widas.cidaas_extension.provider.factorize",
-     *     path="/api/v{version}/_action/widas_cidaas_extension_provider/factorize"
+     *     name="api.cidaas.open_auth.provider.factorize",
+     *     path="/api/v{version}/_action/cidaas_open_auth_provider/factorize"
      * )
      */
     public function createClient(
@@ -141,7 +141,4 @@ class AdministrationController extends AbstractController
 
         return $responseFactory->createDetailResponse($criteria, $entity, $definition, $request, $context, false);
     }
-
-
-
 }

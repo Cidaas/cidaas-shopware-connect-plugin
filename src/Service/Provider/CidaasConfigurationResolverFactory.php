@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service\Provider;
+namespace Cidaas\OpenAuth\Service\Provider;
 
+use Cidaas\OpenAuth\Contract\ClientFeatureCheckerInterface;
+use Cidaas\OpenAuth\Contract\ProviderConfigurationResolverFactoryInterface;
 use Shopware\Core\Framework\Context;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use WidasCidaasExtension\Contract\ClientFeatureCheckerInterface;
-use WidasCidaasExtension\Contract\ProviderConfigurationResolverFactoryInterface;
 
 class CidaasConfigurationResolverFactory implements ProviderConfigurationResolverFactoryInterface
 {
@@ -53,9 +53,10 @@ class CidaasConfigurationResolverFactory implements ProviderConfigurationResolve
             }
 
             return \array_unique(\array_merge($scopes, [
+                'profile',
                 'email',
                 'openid',
-                'profile',
+                'roles'                
             ]));
         });
 

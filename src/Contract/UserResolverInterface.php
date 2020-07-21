@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Contract;
+namespace Cidaas\OpenAuth\Contract;
 
+use Cidaas\OpenAuth\Struct\UserStruct;
 use Shopware\Core\Framework\Context;
-use WidasCidaasExtension\Struct\UserStruct;
 
 interface UserResolverInterface
 {

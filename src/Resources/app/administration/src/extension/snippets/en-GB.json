@@ -1,7 +1,7 @@
 {
     "sw-profile-index": {
-        "titleWidasCidaasExtensionCard": "OAuth",
-        "widasCidaasExtension": {
+        "titleCidaasOpenAuthCard": "OAuth",
+        "cidaasOpenAuth": {
             "userKeys": {
                 "columns": {
                     "provider": "Provider",

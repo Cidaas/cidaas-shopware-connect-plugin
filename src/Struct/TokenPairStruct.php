@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Struct;
+namespace Cidaas\OpenAuth\Struct;
 
 use DateTimeInterface;
 use Shopware\Core\Framework\Struct\Struct;

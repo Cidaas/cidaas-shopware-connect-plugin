@@ -1,14 +1,14 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service;
+namespace Cidaas\OpenAuth\Service;
 
-use WidasCidaasExtension\Contract\ClientFeatureCheckerInterface;
-use WidasCidaasExtension\Contract\ClientLoaderInterface;
-use WidasCidaasExtension\Contract\LoginInterface;
-use WidasCidaasExtension\Contract\OpenAuthenticationFlowInterface;
-use WidasCidaasExtension\Contract\UserResolverInterface;
-use WidasCidaasExtension\Database\ClientEntity;
-use WidasCidaasExtension\Exception\LoadClientException;
+use Cidaas\OpenAuth\Contract\ClientFeatureCheckerInterface;
+use Cidaas\OpenAuth\Contract\ClientLoaderInterface;
+use Cidaas\OpenAuth\Contract\LoginInterface;
+use Cidaas\OpenAuth\Contract\OpenAuthenticationFlowInterface;
+use Cidaas\OpenAuth\Contract\UserResolverInterface;
+use Cidaas\OpenAuth\Database\ClientEntity;
+use Cidaas\OpenAuth\Exception\LoadClientException;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -110,7 +110,7 @@ class OpenAuthenticationFlow implements OpenAuthenticationFlowInterface
                 return [
                     'name' => $client->getName(),
                     'url' => $this->router->generate(
-                        'administration.administration.widas.cidaas_extension.remote_login',
+                        'administration.cidaas.open_auth.remote_login',
                         ['clientId' => $client->getId()],
                         UrlGeneratorInterface::ABSOLUTE_URL
                     ),

@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Contract;
+namespace Cidaas\OpenAuth\Contract;
 
+use Cidaas\OpenAuth\Component\Contract\ClientInterface;
+use Cidaas\OpenAuth\Exception\LoadClientException;
 use Shopware\Core\Framework\Context;
-use WidasCidaasExtension\Component\Contract\ClientInterface;
-use WidasCidaasExtension\Exception\LoadClientException;
 
 interface ClientLoaderInterface
 {

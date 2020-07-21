@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service;
+namespace Cidaas\OpenAuth\Service;
 
-use WidasCidaasExtension\Contract\LoginInterface;
-use WidasCidaasExtension\Database\LoginCollection;
-use WidasCidaasExtension\Database\LoginEntity;
+use Cidaas\OpenAuth\Contract\LoginInterface;
+use Cidaas\OpenAuth\Database\LoginCollection;
+use Cidaas\OpenAuth\Database\LoginEntity;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;

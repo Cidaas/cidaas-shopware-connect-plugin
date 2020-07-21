@@ -1,6 +1,6 @@
-<?php  declare(strict_types=1);
+<?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Database;
+namespace Cidaas\OpenAuth\Database;
 
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\BoolField;
@@ -16,7 +16,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 
 class ClientDefinition extends EntityDefinition
 {
-    public const ENTITY_NAME = 'widas_cidaas_extension_client';
+    public const ENTITY_NAME = 'cidaas_open_auth_client';
 
     public function getEntityName(): string
     {

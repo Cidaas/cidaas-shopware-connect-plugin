@@ -1,14 +1,14 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service;
+namespace Cidaas\OpenAuth\Service;
 
-use WidasCidaasExtension\Contract\ClientFeatureCheckerInterface;
-use WidasCidaasExtension\Contract\ClientLoaderInterface;
-use WidasCidaasExtension\Contract\TokenRefresherInterface;
-use WidasCidaasExtension\Contract\UserTokenInterface;
-use WidasCidaasExtension\Database\UserTokenEntity;
-use WidasCidaasExtension\Exception\LoadClientException;
-use WidasCidaasExtension\Struct\TokenPairStruct;
+use Cidaas\OpenAuth\Contract\ClientFeatureCheckerInterface;
+use Cidaas\OpenAuth\Contract\ClientLoaderInterface;
+use Cidaas\OpenAuth\Contract\TokenRefresherInterface;
+use Cidaas\OpenAuth\Contract\UserTokenInterface;
+use Cidaas\OpenAuth\Database\UserTokenEntity;
+use Cidaas\OpenAuth\Exception\LoadClientException;
+use Cidaas\OpenAuth\Struct\TokenPairStruct;
 use Shopware\Core\Framework\Context;
 
 class TokenRefresher implements TokenRefresherInterface

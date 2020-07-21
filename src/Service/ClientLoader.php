@@ -1,19 +1,19 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service;
+namespace Cidaas\OpenAuth\Service;
 
+use Cidaas\OpenAuth\Component\Contract\ClientInterface;
+use Cidaas\OpenAuth\Contract\ClientLoaderInterface;
+use Cidaas\OpenAuth\Contract\ProviderRepositoryInterface;
+use Cidaas\OpenAuth\Database\ClientCollection;
+use Cidaas\OpenAuth\Exception\LoadClientClientNotFoundException;
+use Cidaas\OpenAuth\Exception\LoadClientException;
+use Cidaas\OpenAuth\Exception\LoadClientMatchingProviderNotFoundException;
+use Cidaas\OpenAuth\Exception\ProvideClientException;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\Uuid\Uuid;
-use WidasCidaasExtension\Component\Contract\ClientInterface;
-use WidasCidaasExtension\Contract\ClientLoaderInterface;
-use WidasCidaasExtension\Contract\ProviderRepositoryInterface;
-use WidasCidaasExtension\Database\ClientCollection;
-use WidasCidaasExtension\Exception\LoadClientClientNotFoundException;
-use WidasCidaasExtension\Exception\LoadClientException;
-use WidasCidaasExtension\Exception\LoadClientMatchingProviderNotFoundException;
-use WidasCidaasExtension\Exception\ProvideClientException;
 
 class ClientLoader implements ClientLoaderInterface
 {

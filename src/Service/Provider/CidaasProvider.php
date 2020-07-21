@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service\Provider;
+namespace Cidaas\OpenAuth\Service\Provider;
 
-use WidasCidaasExtension\Component\Contract\ClientInterface;
-use WidasCidaasExtension\Component\Provider\CidaasClient;
-use WidasCidaasExtension\Contract\ProviderInterface;
-use WidasCidaasExtension\Contract\TokenPairFactoryInterface;
-use WidasCidaasExtension\Exception\ProvideClientInvalidConfigurationException;
+use Cidaas\OpenAuth\Component\Contract\ClientInterface;
+use Cidaas\OpenAuth\Component\Provider\CidaasClient;
+use Cidaas\OpenAuth\Contract\ProviderInterface;
+use Cidaas\OpenAuth\Contract\TokenPairFactoryInterface;
+use Cidaas\OpenAuth\Exception\ProvideClientInvalidConfigurationException;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -59,7 +59,7 @@ class CidaasProvider implements ProviderInterface
             'config' => [
                 'clientId' => '',
                 'clientSecret' => '',
-                'redirectUri' => $this->router->generate('administration.widas.cidaas_extension.login', [
+                'redirectUri' => $this->router->generate('administration.cidaas.open_auth.login', [
                     'clientId' => $clientId,
                 ], UrlGeneratorInterface::ABSOLUTE_URL),
                 'scopes' => [],

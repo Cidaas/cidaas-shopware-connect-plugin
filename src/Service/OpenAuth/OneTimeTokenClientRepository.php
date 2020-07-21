@@ -1,7 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service\OpenAuth;
-
+namespace Cidaas\OpenAuth\Service\OpenAuth;
 
 use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
 use Shopware\Core\Framework\Api\OAuth\Client\ApiClient;
@@ -18,9 +17,13 @@ class OneTimeTokenClientRepository implements ClientRepositoryInterface
         $this->decorated = $decorated;
     }
 
-    public function getClientEntity($clientIdentifier, $grantType = null, $clientSecret = null, $mustValidateSecret = true)
-    {
-        if ($grantType === 'widas_cidaas_extension_one_time_token' && $clientIdentifier === 'administration') {
+    public function getClientEntity(
+        $clientIdentifier,
+        $grantType = null,
+        $clientSecret = null,
+        $mustValidateSecret = true
+    ) {
+        if ($grantType === 'cidaas_open_auth_one_time_token' && $clientIdentifier === 'administration') {
             return new ApiClient('administration', true);
         }
 

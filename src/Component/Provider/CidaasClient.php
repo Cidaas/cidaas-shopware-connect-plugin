@@ -1,14 +1,14 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Component\Provider;
+namespace Cidaas\OpenAuth\Component\Provider;
 
-use League\OAuth2\Client\Provider\AbstractProvider;
-use League\OAuth2\Client\Provider\GenericResourceOwner;
-use WidasCidaasExtension\Component\Contract\ClientInterface;
-use WidasCidaasExtension\Component\OpenAuth\Cidaas;
-use WidasCidaasExtension\Contract\TokenPairFactoryInterface;
-use WidasCidaasExtension\Struct\TokenPairStruct;
-use WidasCidaasExtension\Struct\UserStruct;
+use Cidaas\OpenAuth\Component\Contract\ClientInterface;
+use Cidaas\OpenAuth\Component\OpenAuth\Widas;
+use Cidaas\OpenAuth\Contract\TokenPairFactoryInterface;
+use Cidaas\OpenAuth\Struct\TokenPairStruct;
+use Cidaas\OpenAuth\Struct\UserStruct;
+use Cidaas\OpenAuth\OAuth2\Client\Provider\AbstractProvider;
+use Cidaas\OpenAuth\OAuth2\Client\Provider\CidaasResourceOwner;
 
 class CidaasClient implements ClientInterface
 {
@@ -18,14 +18,14 @@ class CidaasClient implements ClientInterface
     private $tokenPairFactory;
 
     /**
-     * @var Cidaas
+     * @var Widas
      */
     private $cidaasClient;
 
-    public function __construct(TokenPairFactoryInterface $tokenPairFactory, array  $options)
+    public function __construct(TokenPairFactoryInterface $tokenPairFactory, array $options)
     {
         $this->tokenPairFactory = $tokenPairFactory;
-        $this->cidaasClient = new Cidaas($options);
+        $this->cidaasClient = new Widas($options);
     }
 
     public function getLoginUrl(string $state): string
@@ -36,14 +36,14 @@ class CidaasClient implements ClientInterface
     public function getUser(string $state, string $code): UserStruct
     {
         $token = $this->cidaasClient->getAccessToken('authorization_code', ['code' => $code]);
-        /** @var  GenericResourceOwner $user*/
+        /** @var CidaasResourceOwner $user */
         $user = $this->cidaasClient->getResourceOwner($token);
 
         return (new UserStruct())
             ->setPrimaryKey($user->getId())
             ->setTokenPair($this->tokenPairFactory->fromLeagueToken($token))
-            ->setDisplayName($user->toArray()['username'])
-            ->setPrimaryEmail($user->toArray()['email'])
+            ->setDisplayName($user->getName())
+            ->setPrimaryEmail($user->getEmail())
             ->setEmails([]);
     }
 

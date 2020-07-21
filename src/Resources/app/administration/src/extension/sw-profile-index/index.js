@@ -8,66 +8,66 @@ Component.override('sw-profile-index', {
 
     data() {
         return {
-            widasCidaasExtensionLoading: true,
-            widasCidaasExtensionClients: [],
+            cidaasOpenAuthLoading: true,
+            cidaasOpenAuthClients: [],
         }
     },
 
     computed: {
-        widasCidaasExtensionClientsRepository() {
-            return this.repositoryFactory.create('widas_cidaas_extension_client')
+        cidaasOpenAuthClientsRepository() {
+            return this.repositoryFactory.create('cidaas_open_auth_client')
         },
 
-        widasCidaasExtensionUserEmailsRepository() {
-            return this.repositoryFactory.create('widas_cidaas_extension_user_email')
+        cidaasOpenAuthUserEmailsRepository() {
+            return this.repositoryFactory.create('cidaas_open_auth_user_email')
         },
 
-        widasCidaasExtensionUserKeysRepository() {
-            return this.repositoryFactory.create('widas_cidaas_extension_user_key')
+        cidaasOpenAuthUserKeysRepository() {
+            return this.repositoryFactory.create('cidaas_open_auth_user_key')
         },
 
-        widasCidaasExtensionUserTokensRepository() {
-            return this.repositoryFactory.create('widas_cidaas_extension_user_token')
+        cidaasOpenAuthUserTokensRepository() {
+            return this.repositoryFactory.create('cidaas_open_auth_user_token')
         }
     },
 
     methods: {
-        loadWidasCidaasExtension(userId) {
-            this.widasCidaasExtensionLoading = true;
+        loadCidaasOpenAuth(userId) {
+            this.cidaasOpenAuthLoading = true;
 
-            this.widasCidaasExtensionClients = [];
+            this.cidaasOpenAuthClients = [];
             const criteria = new Criteria();
             criteria.getAssociation('userKeys').addFilter(Criteria.equals('userId', userId));
             criteria.getAssociation('userEmails').addFilter(Criteria.equals('userId', userId));
             criteria.getAssociation('userTokens').addFilter(Criteria.equals('userId', userId));
 
-            return this.widasCidaasExtensionClientsRepository
+            return this.cidaasOpenAuthClientsRepository
                 .search(criteria, Context.api)
                 .then(result => {
-                    this.widasCidaasExtensionClients = result.filter(client =>
+                    this.cidaasOpenAuthClients = result.filter(client =>
                         (client.active && client.connect) || client.userKeys.length > 0
                     );
-                    this.widasCidaasExtensionLoading = false;
+                    this.cidaasOpenAuthLoading = false;
                 });
         },
 
-        revokeWidasCidaasExtensionUserKey(item) {
+        revokeCidaasOpenAuthUserKey(item) {
             return Promise.all([
                 ...item.userKeys.map(key =>
-                    this.widasCidaasExtensionUserKeysRepository.delete(key.id, Context.api),
+                    this.cidaasOpenAuthUserKeysRepository.delete(key.id, Context.api),
                 ),
                 ...item.userEmails.map(email =>
-                    this.widasCidaasExtensionUserEmailsRepository.delete(email.id, Context.api)
+                    this.cidaasOpenAuthUserEmailsRepository.delete(email.id, Context.api)
                 ),
                 ...item.userTokens.map(token =>
-                    this.widasCidaasExtensionUserTokensRepository.delete(token.id, Context.api)
+                    this.cidaasOpenAuthUserTokensRepository.delete(token.id, Context.api)
                 )
             ])
-                .then(() => this.loadWidasCidaasExtension(this.user.id));
+                .then(() => this.loadCidaasOpenAuth(this.user.id));
         },
 
         redirectToLoginMask(clientId) {
-            this.widasCidaasExtensionClientsRepository
+            this.cidaasOpenAuthClientsRepository
                 .httpClient
                 .get(`/_admin/open-auth/${clientId}/connect`)
                 .then(response => {
@@ -77,7 +77,7 @@ Component.override('sw-profile-index', {
 
         getUserData() {
             return this.$super('getUserData').then(user => {
-                return this.loadWidasCidaasExtension(user.id).then(() => user);
+                return this.loadCidaasOpenAuth(user.id).then(() => user);
             })
         }
     }

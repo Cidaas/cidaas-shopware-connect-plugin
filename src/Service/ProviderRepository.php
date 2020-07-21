@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Service;
+namespace Cidaas\OpenAuth\Service;
 
-use WidasCidaasExtension\Contract\ProviderInterface;
-use WidasCidaasExtension\Contract\ProviderRepositoryInterface;
+use Cidaas\OpenAuth\Contract\ProviderInterface;
+use Cidaas\OpenAuth\Contract\ProviderRepositoryInterface;
 use Traversable;
 
 class ProviderRepository implements ProviderRepositoryInterface

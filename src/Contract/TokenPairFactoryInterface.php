@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Contract;
+namespace Cidaas\OpenAuth\Contract;
 
+use Cidaas\OpenAuth\Struct\TokenPairStruct;
 use League\OAuth2\Client\Token\AccessTokenInterface;
-use WidasCidaasExtension\Struct\TokenPairStruct;
 
 interface TokenPairFactoryInterface
 {

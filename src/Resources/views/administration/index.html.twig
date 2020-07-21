@@ -1,3 +1,3 @@
-{% set widasCidaasExtensionParent %}{% include '@WidasCidaasExtension/administration/index-base.html.twig' %}{% endset %}
-{% set widasCidaasExtensionScript %}{% include '@WidasCidaasExtension/administration/index-js.html.twig' %}{% endset %}
-{{ widasCidaasExtensionParent|replace({'</body>': widasCidaasExtensionParent})|raw }}
+{% set cidaasOpenAuthParent %}{% include '@CidaasOpenAuth/administration/index-base.html.twig' %}{% endset %}
+{% set cidaasOpenAuthScript %}{% include '@CidaasOpenAuth/administration/index-js.html.twig' %}{% endset %}
+{{ cidaasOpenAuthParent|replace({'</body>': cidaasOpenAuthScript})|raw }}

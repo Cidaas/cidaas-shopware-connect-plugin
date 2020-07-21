@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace WidasCidaasExtension\Contract;
+namespace Cidaas\OpenAuth\Contract;
 
 use Shopware\Core\Framework\Context;
 use Shopware\Core\System\User\UserCollection;
