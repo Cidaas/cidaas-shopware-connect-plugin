@@ -1,0 +1,15 @@
+{
+    "cidaasOpenAuthClient": {
+        "providers": {
+            "cidaas": "cidaas"
+        },
+        "providerFields": {
+            "cidaas": {
+                "additionalScopes": "Application scopes",
+                "clientId": "Application identifier",
+                "clientSecret": "Application secret",
+                "redirectUri": "Redirect URL"
+            }
+        }
+    }
+}

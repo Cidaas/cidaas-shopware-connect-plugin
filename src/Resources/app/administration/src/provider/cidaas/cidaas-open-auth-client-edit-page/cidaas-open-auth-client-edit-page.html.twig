@@ -1,0 +1,28 @@
+{% block cidaas_open_auth_client_edit_page_content_provider_settings %}
+    {% parent %}
+
+    <sw-card
+        v-if="item && item.provider === 'cidaas'"
+    >
+        <sw-text-field
+            :copyable="true"
+            :copyableTooltip="true"
+            :label="$t('cidaasOpenAuthClient.providerFields.cidaas.redirectUri')"
+            :value="item.config.redirectUri"
+            disabled
+        ></sw-text-field>
+        <sw-text-field
+            :label="$t('cidaasOpenAuthClient.providerFields.cidaas.clientId')"
+            v-model="item.config.clientId"
+        ></sw-text-field>
+        <sw-password-field
+            :label="$t('cidaasOpenAuthClient.providerFields.cidaas.clientSecret')"
+            v-model="item.config.clientSecret"
+        ></sw-password-field>
+        <cidaas-open-auth-scope-field
+            :label="$t('cidaasOpenAuthClient.providerFields.cidaas.additionalScopes')"
+            :defaultScopes="['profile', 'email', 'openid', 'roles']"
+            v-model="item.config.scopes"
+        ></cidaas-open-auth-scope-field>
+    </sw-card>
+{% endblock %}

@@ -1,0 +1,17 @@
+{
+    "sw-profile-index": {
+        "titleCidaasOpenAuthCard": "OAuth",
+        "cidaasOpenAuth": {
+            "userKeys": {
+                "columns": {
+                    "provider": "Anbieter",
+                    "createdAt": "Verbunden am"
+                },
+                "actions": {
+                    "connect": "Verbinden",
+                    "revoke": "Verbindung trennen"
+                }
+            }
+        }
+    }
+}

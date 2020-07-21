@@ -1,0 +1,66 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        bind:
+            Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface $clientsRepository: '@cidaas_open_auth_client.repository'
+            Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface $loginsRepository: '@cidaas_open_auth_login.repository'
+            Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface $userEmailsRepository: '@cidaas_open_auth_user_email.repository'
+            Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface $userKeysRepository: '@cidaas_open_auth_user_key.repository'
+            Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface $userTokensRepository: '@cidaas_open_auth_user_token.repository'
+
+    _instanceof:
+        Cidaas\OpenAuth\Contract\ProviderInterface:
+            tags:
+                - 'cidaas_open_auth.client_provider'
+        Symfony\Component\EventDispatcher\EventSubscriberInterface:
+            tags:
+                - 'kernel.event_subscriber'
+
+    Cidaas\OpenAuth\:
+        resource: '../../*'
+        exclude:
+            - '../../Database/*Collection.php'            
+            - '../../Database/*Entity.php'
+            - '../../OAuth2/*'
+            - '../../Exception/*'
+            - '../../Migration/*'
+            - '../../Resources/*'
+
+    Cidaas\OpenAuth\Database\ClientDefinition:
+        tags:
+            - { name: shopware.entity.definition , entity: 'cidaas_open_auth_client' }
+    Cidaas\OpenAuth\Database\LoginDefinition:
+        tags:
+            - { name: shopware.entity.definition , entity: 'cidaas_open_auth_login' }
+    Cidaas\OpenAuth\Database\UserEmailDefinition:
+        tags:
+            - { name: shopware.entity.definition , entity: 'cidaas_open_auth_user_email' }
+    Cidaas\OpenAuth\Database\UserKeyDefinition:
+        tags:
+            - { name: shopware.entity.definition , entity: 'cidaas_open_auth_user_key' }
+    Cidaas\OpenAuth\Database\UserTokenDefinition:
+        tags:
+            - { name: shopware.entity.definition , entity: 'cidaas_open_auth_user_token' }
+
+    Cidaas\OpenAuth\Service\OpenAuth\OneTimeTokenClientRepository:
+        decorates: Shopware\Core\Framework\Api\OAuth\ClientRepository
+        arguments:
+            - '@Cidaas\OpenAuth\Service\OpenAuth\OneTimeTokenClientRepository.inner'
+    Cidaas\OpenAuth\OpenAuth\OneTimeTokenScopeRepository:
+        decorates: Shopware\Core\Framework\Api\OAuth\ScopeRepository
+        arguments:
+            - '@Cidaas\OpenAuth\OpenAuth\OneTimeTokenScopeRepository.inner'
+
+    Cidaas\OpenAuth\Subscriber\ApiAuthentication:
+        arguments:
+            - '@shopware.api.authorization_server'
+            - '@Shopware\Core\Framework\Api\OAuth\UserRepository'
+            - '@Shopware\Core\Framework\Api\OAuth\RefreshTokenRepository'
+
+    Cidaas\OpenAuth\Service\ProviderRepository:
+        arguments:
+            - !tagged_iterator cidaas_open_auth.client_provider
+    Cidaas\OpenAuth\Service\UserResolver:
+        arguments:
+            - '@user.repository'
