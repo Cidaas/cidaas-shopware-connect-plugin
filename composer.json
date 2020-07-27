@@ -1,21 +1,27 @@
 {
-    "name": "cidaas/oauth2-connect",
+    "name": "cidaas/cidaas-oauth2-connect",
     "description": "cidaas Oauth2 Connect Plugin",
     "version": "1.0.0",
     "type": "shopware-platform-plugin",
     "license": "MIT",
-    "authors": [
-        {
-            "name": "cidaas",
-            "homepage": "https://cidaas.com",
-            "role": "User Management"
-        }
+    "keywords": [
+        "cidaas",
+        "shopware",
+        "oauth2",
+        "openid"
     ],
+    "authors": [{
+        "name": "Widas GmbH",
+        "homepage": "https://cidaas.com",
+        "role": "Manufacturer"
+    }],
     "require": {
+        "php": ">= 7.2",
+        "league/oauth2-client": "~2.0",
         "shopware/core": "~6.2.0"
     },
     "extra": {
-        "shopware-plugin-class": "Cidaas\\Oauth2Connect\\Oauth2Connect",
+        "shopware-plugin-class": "Cidaas\\OauthConnect\\CidaasOauthConnect",
         "plugin-icon": "src/Resources/config/plugin.png",
         "copyright": "(c) by Widas GmbH",
         "label": {
@@ -37,7 +43,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Cidaas\\Oauth2Connect\\": "src/"
+            "Cidaas\\OauthConnect\\": "src/"
         }
     }
 }

@@ -6,5 +6,5 @@
 
 - Move plugin to custom/plugins
 - Run bin/console plugin:update
-- Run bin/console plugin:install --activate Oauth2Connect
+- Run bin/console plugin:install --activate CidaasOauthConnect
 - Run bin/console cache:clear
