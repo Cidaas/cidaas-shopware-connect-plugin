@@ -1,0 +1,8 @@
+{% sw_extends '@Storefront/storefront/component/account/login.html.twig' %}
+    {% block component_account_login_submit %}
+        {{ parent() }}
+        <div class="pt-2">
+            <a class="btn btn-outline-dark" type="button" href={{ path('frontend.login') }}>
+                <img src="https://cdn.cidaas.de/images/logo-single.png" style="width: 30px; height: 35px;"> Login With Cidaas</a>
+        </div>
+    {% endblock %}
