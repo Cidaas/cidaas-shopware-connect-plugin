@@ -39,6 +39,12 @@
             <label>Access Token Uri</label>
             <label lang="de-DE">Access Token Uri</label>
         </input-field>
+         <input-field type="url">
+            <name>userUri</name>
+            <label>User information Uri</label>
+            <label lang="de-DE">User information Uri</label>
+        </input-field>
+
 
     </card>
 </config>

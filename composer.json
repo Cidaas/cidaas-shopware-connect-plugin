@@ -18,7 +18,7 @@
     "require": {
         "php": ">= 7.2",
         "league/oauth2-client": "~2.0",
-        "shopware/core": "~6.2.0"
+        "shopware/core": "~6.3.0"
     },
     "extra": {
         "shopware-plugin-class": "Cidaas\\OauthConnect\\CidaasOauthConnect",

@@ -5,6 +5,11 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <services>
-
+        <service id="Cidaas\OauthConnect\Controller\FrontendController" public="true">
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <tag name="controller.service_arguments"/>
+            <argument type="service" id="customer.repository"/>
+            <argument type="service" id ="Doctrine\DBAL\Connection"/>
+        </service>
     </services>
 </container>
