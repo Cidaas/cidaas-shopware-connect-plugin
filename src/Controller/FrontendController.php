@@ -2,22 +2,33 @@
 
 namespace Cidaas\OauthConnect\Controller;
 
+
+use Shopware\Storefront\Controller\AuthController;
+
+
+
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Request as HttpRequest;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Request ;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
+use Shopware\Core\Checkout\Customer\CustomerEntity;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
-use Shopware\Core\Framework\Demodata\DemodataContext;
-use Shopware\Core\Framework\Demodata\Generator\CustomerGenerator;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Shopware\Core\Framework\Uuid\Uuid;
+use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
+use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Storefront\Controller\StorefrontController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -48,6 +59,11 @@ class FrontendController extends StorefrontController
      */
     protected $connection;
 
+    /**
+     * @var CustomerEntity
+     */
+    protected $entities;
+
     protected $salutationIds;
 
     public function __construct(SystemConfigService $systemConfigService,EntityRepositoryInterface $customerRepository,Connection $connection)
@@ -60,7 +76,7 @@ class FrontendController extends StorefrontController
     /**
      * @Route ("/cidaas/login", name="frontend.login", methods={"GET"})
      */
-    public function login()
+    public function Cidaaslogin()
     {
         $provider = $this->getProvider();
         $authorizationUrl = $provider->getAuthorizationUrl();
@@ -69,24 +85,47 @@ class FrontendController extends StorefrontController
     }
 
     /**
+     * @Route ("/cidaas/register", name="frontend.register", methods={"GET"})
+     */
+    public function register()
+    {
+    $provider = $this->getProvider();
+    $authorizationUrl = $provider->getAuthorizationUrl();
+    $authorizationUrl = $authorizationUrl.'&view_type=register';
+    return new RedirectResponse($authorizationUrl, Response::HTTP_TEMPORARY_REDIRECT);
+    // redirect to authorizationURL
+    }
+
+    /**
      * @Route("/cidaas/redirect", name="frontend.redirect", methods={"GET"})
      */
-    public function redirectAfterResponse(Request $request)
+    public function redirectAfterResponse(Request $request, SalesChannelContext $context)
     {
         $state = $request->query->get('state');
         $code = $request->query->get('code');
         $accessToken = $this->getAccessToken($code);
         $resourceOwner = $this->getResourceOwner($accessToken);
         $this->customerRepository = $this->container->get('customer.repository');
-      /*  $entities = $this->customerRepository->search(
-            (new Criteria())->addFilter(new EqualsFilter('lastName', 'mallela')),
+        
+        $entities = $this->customerRepository->search(
+            (new Criteria())->addFilter(new EqualsFilter('email', $resourceOwner['email'])),
             \Shopware\Core\Framework\Context::createDefaultContext()
         );
-        **/
+        $basecontext = \Shopware\Core\Framework\Context::createDefaultContext();
+
+        //$pass = $this->connection->executeQuery('SELECT `password` FROM `customer` WHERE `email` = `gopi.mallela@widas.in` ' )->fetchAll(FetchMode::COLUMN);
+        //echo implode(" ",$pass);
+        if(!empty($entities))
+        {
+            $password = $entities->getEntities();
+            //echo $password;
+        }
+
+
         $countries = $this->connection
         ->executeQuery('SELECT id FROM country WHERE active = 1')
         ->fetchAll(FetchMode::COLUMN);
-         
+       /* 
         $this->customerRepository->create(
             [
                 [
@@ -129,9 +168,48 @@ class FrontendController extends StorefrontController
             ],
             \Shopware\Core\Framework\Context::createDefaultContext()
         );
+        **/
+
+        $client = new Client();
+        $body = \json_encode([
+            'grant_type' => 'password',
+            'username' => 'gopi.mallela@widas.in',
+            'password' => 'gopi'
+        ]);
+        $request = new HttpRequest(
+            'POST',
+            getenv('APP_URL') . '/api/oauth/token',
+            ['Content-Type' => 'application/json'],
+            $body
+        );
+
+        $response = $client->sendRequest($request);
+        return $response;
+        /*
+        $body = \json_encode([
+            'username' => 'gopi.mallela@widas.in',
+            'password' => 'gopi'
+        ]);
         
-        
-        return new RedirectResponse('192.168.33.10', Response::HTTP_TEMPORARY_REDIRECT);
+        $request = new HttpRequest(
+            'POST',
+            'http://192.168.33.10/account/login',
+            ['Content-Type' => 'application/x-www-form-urlencoded','Authorization' => 'Bearer ' . 'SWSCMHQYNU51VJFJMM1GELFLZQ'],
+            $body
+        );
+        $response = $client->send($request);
+        return $response;
+        //$body = json_decode($response->getBody()->getContents(), true);
+        //$code = $body['contextToken'];
+        //echo $code;
+       /*
+        $finalRoute = $this->generateUrl(
+            'frontend.account.login',
+            ['sw-context-token' => $code],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+        return new RedirectResponse($finalRoute, Response::HTTP_TEMPORARY_REDIRECT);
+        */
     }
 
     protected function getResourceOwner(AccessToken $token)
