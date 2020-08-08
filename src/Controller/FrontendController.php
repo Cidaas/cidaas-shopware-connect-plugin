@@ -2,9 +2,15 @@
 
 namespace Cidaas\OauthConnect\Controller;
 
+use Cidaas\OauthConnect\Oauth\HttpClient\HttpClientInterface;
+use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\BrowserKit\HttpBrowser;
 
-use Shopware\Storefront\Controller\AuthController;
 
+use Shopware\Storefront\Page\Account\Login\AccountLoginPageLoader;
+
+
+use Shopware\Core\Checkout\Customer\SalesChannel\AbstractLoginRoute;
 
 
 use Doctrine\DBAL\Connection;
@@ -32,11 +38,15 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Route as RoutingRoute;
+
+use function GuzzleHttp\Psr7\copy_to_string;
+
 /**
  * @RouteScope(scopes={"storefront"})
  */
 
-class FrontendController extends StorefrontController
+class FrontendController extends StoreFrontController
 {
     
     /**
@@ -64,6 +74,17 @@ class FrontendController extends StorefrontController
      */
     protected $entities;
 
+    /**
+     * @var AbstractLoginRoute
+     */
+    protected $loginRoute;
+
+    /**
+     * @var AccountLoginPageLoader
+     */
+    protected $loginPageLoader;
+
+
     protected $salutationIds;
 
     public function __construct(SystemConfigService $systemConfigService,EntityRepositoryInterface $customerRepository,Connection $connection)
@@ -71,6 +92,7 @@ class FrontendController extends StorefrontController
         $this->systemConfigService = $systemConfigService;
         $this->customerRepository = $customerRepository;
         $this->connection = $connection;
+  
     }
 
     /**
@@ -97,7 +119,7 @@ class FrontendController extends StorefrontController
     }
 
     /**
-     * @Route("/cidaas/redirect", name="frontend.redirect", methods={"GET"})
+     * @Route("/cidaas/redirect", name="frontend.redirect", methods={"GET"},defaults={"csrf_protected"=false})
      */
     public function redirectAfterResponse(Request $request, SalesChannelContext $context)
     {
@@ -137,7 +159,7 @@ class FrontendController extends StorefrontController
                     'salesChannelId' => Defaults::SALES_CHANNEL,
                     'defaultBillingAddressId' => Uuid::randomHex(),
                     'defaultShippingAddressId' => Uuid::randomHex(),
-                    'salutationId' => Uuid::fromBytesToHex($this->getRandomSalutationId()),
+                    'salutationId' => Uuid::fromBytesToHex($this->getRandomSalutationId()),$this->salutationIds[array_rand($this->salutationIds)
                     'customerNumber' => $resourceOwner['sub'],
                     'addresses' => [
                         [
@@ -170,52 +192,72 @@ class FrontendController extends StorefrontController
         );
         **/
 
-        $client = new Client();
-        $body = \json_encode([
-            'grant_type' => 'password',
-            'username' => 'gopi.mallela@widas.in',
-            'password' => 'gopi'
-        ]);
-        $request = new HttpRequest(
-            'POST',
-            getenv('APP_URL') . '/api/oauth/token',
-            ['Content-Type' => 'application/json'],
-            $body
-        );
+       
 
-        $response = $client->sendRequest($request);
-        return $response;
-        /*
-        $body = \json_encode([
-            'username' => 'gopi.mallela@widas.in',
-            'password' => 'gopi'
-        ]);
+    
         
         $request = new HttpRequest(
             'POST',
-            'http://192.168.33.10/account/login',
-            ['Content-Type' => 'application/x-www-form-urlencoded','Authorization' => 'Bearer ' . 'SWSCMHQYNU51VJFJMM1GELFLZQ'],
-            $body
+            'http://192.168.33.10/csrf/generate',
+            ['Content-Type' => 'application/json',]
+            
         );
-        $response = $client->send($request);
-        return $response;
-        //$body = json_decode($response->getBody()->getContents(), true);
+        //$response = $client->send($request);
+       // $body = json_decode($response->getBody()->getContents(), true);
+        //$cookie = $response->getHeader('Set-Cookie');
+        //$header = json_decode($response->getHeader('set-cookie'),true);
+        //echo $header;
+        //$csrftoken = $body['token'];
+        //echo $csrftoken;
+        //$client = new HttpClientInterface();
+
+        $body = \json_encode([
+            'username' => 'gopi.mallela@widas.in',
+            'password' => 'gopi',
+            'redirectTo' => 'frontend.account.home.page',
+            'redirectParams' => '[]'
+        ]);
+        $headers = ['Content-Type' => 'application/x-www-form-urlencoded'];
+        $client = new Client();
+        //$response = $client->request('http://192.168.33.10/account/login','POST', $body, $headers);
+     
+        $request = new HttpRequest(
+            'POST',
+            'http://192.168.33.10/account/login',
+            $headers,
+            'username=gopi.mallela@widas.in&password=gopi&redirectTo=frontend.account.home.page'
+            
+        );
+        $response =$client->send($request);
+        echo copy_to_string($response->getBody());
+        $res  = new Response(copy_to_string($response->getBody()));
+        return $res;
+       // return new RedirectResponse(copy_to_string($request->), Response::HTTP_TEMPORARY_REDIRECT);
+       //$final = $this->generateUrl('frontend.account.login', ["method" => 'POST']);
+       //return new RedirectResponse($final, Response::HTTP_TEMPORARY_REDIRECT);
+        
+        //$view = $client->send($request);
+        //return $this->renderStorefront(copy_to_string($response->getBody()),[]);
+        //return $this->redirectToRoute('frontend.account.login',[$request,$context]);
+       // $body = json_decode($response->getBody()->getContents(), true);
+       // $code = $body['contextToken'];
+        //echo $code;
+        //$newrequest = new Request();
+       // return $this->redirectToRoute('frontend.account.profile.page', [$request, $context] );
+
+        
         //$code = $body['contextToken'];
         //echo $code;
-       /*
-        $finalRoute = $this->generateUrl(
-            'frontend.account.login',
-            ['sw-context-token' => $code],
-            UrlGeneratorInterface::ABSOLUTE_URL
-        );
-        return new RedirectResponse($finalRoute, Response::HTTP_TEMPORARY_REDIRECT);
-        */
+
+
     }
+
+
+    
 
     protected function getResourceOwner(AccessToken $token)
     {
        return  $this->getProvider()->getResourceOwner($token)->toArray();
-        
     }
 
 

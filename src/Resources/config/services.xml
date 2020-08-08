@@ -10,6 +10,7 @@
             <tag name="controller.service_arguments"/>
             <argument type="service" id="customer.repository"/>
             <argument type="service" id ="Doctrine\DBAL\Connection"/>
+            <argument type="service" id="Shopware\Core\Checkout\Customer\SalesChannel\LoginRoute" />
         </service>
     </services>
 </container>
