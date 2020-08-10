@@ -3,9 +3,10 @@
 namespace Cidaas\OauthConnect\Controller;
 
 use Cidaas\OauthConnect\Oauth\HttpClient\HttpClientInterface;
+use Cidaas\OauthConnect\Oauth\Logger\Logger;
+use GuzzleHttp\Psr7\Response as Psr7Response;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\BrowserKit\HttpBrowser;
-
 
 use Shopware\Storefront\Page\Account\Login\AccountLoginPageLoader;
 
@@ -85,7 +86,7 @@ class FrontendController extends StoreFrontController
     protected $loginPageLoader;
 
 
-    protected $salutationIds;
+
 
     public function __construct(SystemConfigService $systemConfigService,EntityRepositoryInterface $customerRepository,Connection $connection)
     {
@@ -127,26 +128,72 @@ class FrontendController extends StoreFrontController
         $code = $request->query->get('code');
         $accessToken = $this->getAccessToken($code);
         $resourceOwner = $this->getResourceOwner($accessToken);
+        //echo implode(" ",$resourceOwner);
+        $resourceOwner = $this->array_flatten($resourceOwner);
+        //$resourceOwner = json_encode($resourceOwner);
+        //echo $resourceOwner;
         $this->customerRepository = $this->container->get('customer.repository');
         
         $entities = $this->customerRepository->search(
             (new Criteria())->addFilter(new EqualsFilter('email', $resourceOwner['email'])),
             \Shopware\Core\Framework\Context::createDefaultContext()
         );
-        $basecontext = \Shopware\Core\Framework\Context::createDefaultContext();
+        $entity = $entities->getTotal();
+        $password = json_decode($resourceOwner['sw_cred']);
+        if(empty($entity))
+        {
+            $countries = $this->connection
+            ->executeQuery("SELECT country_id FROM country_translation WHERE name = '". $resourceOwner["billing_address_country"]. "' ")
+            ->fetchAll(FetchMode::COLUMN);
+
+            $salutationId = $this->connection->executeQuery("SELECT id FROM salutation WHERE  salutation_key  = '". $resourceOwner["salutation"]. "' ")->fetchAll(FetchMode::COLUMN);
+            //echo $password;
+            $body = \json_encode([ 
+                "guest" => false,
+                "salutationId" => Uuid::fromBytesToHex($salutationId[0]),
+                "firstName" => $resourceOwner['given_name'],
+                "lastName" => $resourceOwner['family_name'],
+                "email" => $resourceOwner['email'],
+                'defaultBillingAddressId' => Uuid::randomHex(),
+                'defaultShippingAddressId' => Uuid::randomHex(),
+                "password" =>  $password->{'sw_password'},
+                "billingAddress" => array(
+                    "countryId" => Uuid::fromBytesToHex($countries[0]),
+                    "street" => $resourceOwner['billing_address_street'],
+                    "zipcode" => $resourceOwner['billing_address_zipcode'],
+                    "city" => $resourceOwner['billing_address_city']
+                ),
+                "storefrontUrl" => "http://192.168.33.10",   
+             ]);
+
+             $accesskey = $this->connection->executeQuery('SELECT access_key from sales_channel inner join sales_channel_translation on id = sales_channel_id where name = "Storefront"')->fetchAll(FetchMode::COLUMN);
+   
+            $request = new HttpRequest(
+                'POST',
+                getenv('APP_URL'). '/store-api/v3/account/register',
+                ['Content-Type' => 'application/json','sw-access-key' => $accesskey],
+                $body
+            );
+    
+            $client = new Client();
+            try {
+            $response = $client->send($request);
+            }
+         catch (\GuzzleHttp\Exception\ClientException $e) {
+    
+            echo ($e->getResponse()->getBody()->getContents());
+    
+        }
+
+        }
 
         //$pass = $this->connection->executeQuery('SELECT `password` FROM `customer` WHERE `email` = `gopi.mallela@widas.in` ' )->fetchAll(FetchMode::COLUMN);
         //echo implode(" ",$pass);
-        if(!empty($entities))
-        {
-            $password = $entities->getEntities();
-            //echo $password;
-        }
 
 
-        $countries = $this->connection
-        ->executeQuery('SELECT id FROM country WHERE active = 1')
-        ->fetchAll(FetchMode::COLUMN);
+
+        
+        //echo copy_to_string($response->getBody());
        /* 
         $this->customerRepository->create(
             [
@@ -192,16 +239,8 @@ class FrontendController extends StoreFrontController
         );
         **/
 
-       
-
-    
         
-        $request = new HttpRequest(
-            'POST',
-            'http://192.168.33.10/csrf/generate',
-            ['Content-Type' => 'application/json',]
-            
-        );
+  
         //$response = $client->send($request);
        // $body = json_decode($response->getBody()->getContents(), true);
         //$cookie = $response->getHeader('Set-Cookie');
@@ -210,14 +249,14 @@ class FrontendController extends StoreFrontController
         //$csrftoken = $body['token'];
         //echo $csrftoken;
         //$client = new HttpClientInterface();
-
+/*
         $body = \json_encode([
-            'username' => 'gopi.mallela@widas.in',
-            'password' => 'gopi',
+            'username' => 'eva@mustermann.de',
+            'password' => 'password',
             'redirectTo' => 'frontend.account.home.page',
             'redirectParams' => '[]'
         ]);
-        $headers = ['Content-Type' => 'application/x-www-form-urlencoded'];
+        $headers = ['Content-Type' => 'application/x-www-form-urlencoded','Accept-Encoding' => 'gzip, deflate, br'];
         $client = new Client();
         //$response = $client->request('http://192.168.33.10/account/login','POST', $body, $headers);
      
@@ -225,13 +264,57 @@ class FrontendController extends StoreFrontController
             'POST',
             'http://192.168.33.10/account/login',
             $headers,
-            'username=gopi.mallela@widas.in&password=gopi&redirectTo=frontend.account.home.page'
-            
+            'username=eva%40mustermann.de&password=password&redirectTo=frontend.account.home.page'
         );
-        $response =$client->send($request);
-        echo copy_to_string($response->getBody());
-        $res  = new Response(copy_to_string($response->getBody()));
+        $response = $client->send($request);
+        //return $response;
+        //echo copy_to_string($response->getBody());
+        //$res = new Psr7Response($response->getStatusCode(), $response->getHeaders(), $response->getBody());
+        
+        //$response =$client->send($request);
+ 
+        // echo copy_to_string($response->getBody());
+        // $res = new Response(copy_to_string($response->getBody()));
+        $res = new Response();
+        foreach ($response->getHeaders() as $name => $values) {
+        if($name != 'Transfer-Encoding') {
+        $res->headers->set($name, $values);
+        }
+        }
+
+        $res->headers->set('Location','/account');
+        $res->setStatusCode(302);
+*/
+        // $client = new Client();
+        // $response = $client->post(getenv('APP_URL').'/csrf/generate');
+        // $responseBody = json_decode($response->getBody()->getContents(),true);
+        // $csrf = $responseBody['token'];
+        // echo $csrf;
+        $client = new Client(['redirect.disable' => true]);
+        $response = $client->post(getenv('APP_URL').'/account/login', [
+        'form_params' => [
+        'username' => $resourceOwner['email'],
+        'password' => $password->{'sw_password'},
+        'redirectTo' => 'frontend.account.home.page'
+        ],
+        'allow_redirects' => false
+        ]);
+        $res = new Response();
+        foreach ($response->getHeaders() as $name => $values) {
+        if($name != 'Transfer-Encoding') {
+        $res->headers->set($name, $values);
+        }
+        }
+        $res->setContent(copy_to_string($response->getBody()));
         return $res;
+        //$res->setContent(copy_to_string($response->getBody()));
+        //return $res->send();
+
+        //return $res;
+        
+        //echo copy_to_string($response->getBody()); in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ''' at line 1
+       // $res  = new Response(copy_to_string($response->getBody()));
+        //return $res;
        // return new RedirectResponse(copy_to_string($request->), Response::HTTP_TEMPORARY_REDIRECT);
        //$final = $this->generateUrl('frontend.account.login', ["method" => 'POST']);
        //return new RedirectResponse($final, Response::HTTP_TEMPORARY_REDIRECT);
@@ -247,8 +330,7 @@ class FrontendController extends StoreFrontController
 
         
         //$code = $body['contextToken'];
-        //echo $code;
-
+        //echo $code;  
 
     }
 
@@ -304,5 +386,25 @@ class FrontendController extends StoreFrontController
 
         return $this->salutationIds[array_rand($this->salutationIds)];
     }
+
+    protected function array_flatten($array, $prefix = '')
+    {
+    
+       $result = array();   
+         
+    foreach($array as $key=>$value) {
+         
+            if(is_array($value) && $key !== "roles") {
+                
+                $result = $result + $this->array_flatten($value);
+                
+            }
+            else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
+    }
+    
 
 }
