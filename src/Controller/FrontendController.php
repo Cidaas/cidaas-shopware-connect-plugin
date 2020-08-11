@@ -163,7 +163,7 @@ class FrontendController extends StoreFrontController
                     "zipcode" => $resourceOwner['billing_address_zipcode'],
                     "city" => $resourceOwner['billing_address_city']
                 ),
-                "storefrontUrl" => "http://192.168.33.10",   
+                "storefrontUrl" => getenv('APP_URL'),   
              ]);
 
              $accesskey = $this->connection->executeQuery('SELECT access_key from sales_channel inner join sales_channel_translation on id = sales_channel_id where name = "Storefront"')->fetchAll(FetchMode::COLUMN);
@@ -351,7 +351,7 @@ class FrontendController extends StoreFrontController
 
     protected function getProvider()
     {
-        $redirectUri = 'http://192.168.33.10/cidaas/redirect';
+        $redirectUri = getenv('APP_URL').'/cidaas/redirect';
         $this->provider = new \League\OAuth2\Client\Provider\GenericProvider([
             'clientId' => $this->systemConfigService->get('CidaasOauthConnect.config.clientId'),
             'clientSecret' => $this->systemConfigService->get('CidaasOauthConnect.config.clientSecret'),
