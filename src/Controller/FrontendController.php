@@ -1,31 +1,27 @@
 <?php declare(strict_types=1);
 
+
+
 namespace Cidaas\OauthConnect\Controller;
 
-use Cidaas\OauthConnect\Oauth\HttpClient\HttpClientInterface;
-use Cidaas\OauthConnect\Oauth\Logger\Logger;
-use GuzzleHttp\Psr7\Response as Psr7Response;
-use Psr\Http\Message\ResponseInterface;
-use Symfony\Component\BrowserKit\HttpBrowser;
+
+use Shopware\Core\Framework\Validation\Exception\ConstraintViolationException;
+
+
+
 
 use Shopware\Storefront\Page\Account\Login\AccountLoginPageLoader;
-
-
-use Shopware\Core\Checkout\Customer\SalesChannel\AbstractLoginRoute;
-
-
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request as HttpRequest;
-use Shopware\Core\Defaults;
-use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Symfony\Component\HttpFoundation\Request ;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
+use Shopware\Core\Checkout\Customer\SalesChannel\AbstractLogoutRoute;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
@@ -76,24 +72,24 @@ class FrontendController extends StoreFrontController
     protected $entities;
 
     /**
-     * @var AbstractLoginRoute
+     * @var AbstractLogoutRoute
      */
-    protected $loginRoute;
+    protected $logoutRoute;
 
     /**
      * @var AccountLoginPageLoader
      */
     protected $loginPageLoader;
 
+  
+    
 
-
-
-    public function __construct(SystemConfigService $systemConfigService,EntityRepositoryInterface $customerRepository,Connection $connection)
+    public function __construct(SystemConfigService $systemConfigService,EntityRepositoryInterface $customerRepository,Connection $connection,AbstractLogoutRoute $logoutRoute)
     {
         $this->systemConfigService = $systemConfigService;
         $this->customerRepository = $customerRepository;
         $this->connection = $connection;
-  
+        $this->logoutRoute = $logoutRoute;
     }
 
     /**
@@ -126,6 +122,7 @@ class FrontendController extends StoreFrontController
     {
         $state = $request->query->get('state');
         $code = $request->query->get('code');
+        $_SESSION["code"]=$code;
         $accessToken = $this->getAccessToken($code);
         $resourceOwner = $this->getResourceOwner($accessToken);
         //echo implode(" ",$resourceOwner);
@@ -145,7 +142,7 @@ class FrontendController extends StoreFrontController
             $countries = $this->connection
             ->executeQuery("SELECT country_id FROM country_translation WHERE name = '". $resourceOwner["billing_address_country"]. "' ")
             ->fetchAll(FetchMode::COLUMN);
-
+            
             $salutationId = $this->connection->executeQuery("SELECT id FROM salutation WHERE  salutation_key  = '". $resourceOwner["salutation"]. "' ")->fetchAll(FetchMode::COLUMN);
             //echo $password;
             $body = \json_encode([ 
@@ -187,104 +184,6 @@ class FrontendController extends StoreFrontController
 
         }
 
-        //$pass = $this->connection->executeQuery('SELECT `password` FROM `customer` WHERE `email` = `gopi.mallela@widas.in` ' )->fetchAll(FetchMode::COLUMN);
-        //echo implode(" ",$pass);
-
-
-
-        
-        //echo copy_to_string($response->getBody());
-       /* 
-        $this->customerRepository->create(
-            [
-                [
-                    'groupId' => Defaults::FALLBACK_CUSTOMER_GROUP,
-                    'firstName' => $resourceOwner['name'],
-                    'lastName' => 'test',
-                    'email' => 'developer@widas.in',
-                    'defaultPaymentMethodId' => $this->getDefaultPaymentMethod(),
-                    'salesChannelId' => Defaults::SALES_CHANNEL,
-                    'defaultBillingAddressId' => Uuid::randomHex(),
-                    'defaultShippingAddressId' => Uuid::randomHex(),
-                    'salutationId' => Uuid::fromBytesToHex($this->getRandomSalutationId()),$this->salutationIds[array_rand($this->salutationIds)
-                    'customerNumber' => $resourceOwner['sub'],
-                    'addresses' => [
-                        [
-                            'id' => Uuid::randomHex(),
-                            'customerId' => Uuid::randomHex(),
-                            'countryId' => Uuid::fromBytesToHex($countries[array_rand($countries)]),
-                            'salutationId' => Uuid::fromBytesToHex($this->getRandomSalutationId()),
-                            'firstName' => 'Max',
-                            'lastName' => 'Mustermann',
-                            'street' => 'Ebbinghoff 10',
-                            'zipcode' => '48624',
-                            'city' => 'Schöppingen',
-                        ],
-                        [
-                            'id' => Uuid::randomHex(),
-                            'customerId' => Uuid::randomHex(),
-                            'countryId' => Uuid::fromBytesToHex($countries[array_rand($countries)]),
-                            'salutationId' => Uuid::fromBytesToHex($this->getRandomSalutationId()),
-                            'firstName' => 'Max',
-                            'lastName' => 'Mustermann',
-                            'street' => 'Bahnhofstraße 27',
-                            'zipcode' => '10332',
-                            'city' => 'Berlin',
-                        ],
-                ],
-                    
-                ]    
-            ],
-            \Shopware\Core\Framework\Context::createDefaultContext()
-        );
-        **/
-
-        
-  
-        //$response = $client->send($request);
-       // $body = json_decode($response->getBody()->getContents(), true);
-        //$cookie = $response->getHeader('Set-Cookie');
-        //$header = json_decode($response->getHeader('set-cookie'),true);
-        //echo $header;
-        //$csrftoken = $body['token'];
-        //echo $csrftoken;
-        //$client = new HttpClientInterface();
-/*
-        $body = \json_encode([
-            'username' => 'eva@mustermann.de',
-            'password' => 'password',
-            'redirectTo' => 'frontend.account.home.page',
-            'redirectParams' => '[]'
-        ]);
-        $headers = ['Content-Type' => 'application/x-www-form-urlencoded','Accept-Encoding' => 'gzip, deflate, br'];
-        $client = new Client();
-        //$response = $client->request('http://192.168.33.10/account/login','POST', $body, $headers);
-     
-        $request = new HttpRequest(
-            'POST',
-            'http://192.168.33.10/account/login',
-            $headers,
-            'username=eva%40mustermann.de&password=password&redirectTo=frontend.account.home.page'
-        );
-        $response = $client->send($request);
-        //return $response;
-        //echo copy_to_string($response->getBody());
-        //$res = new Psr7Response($response->getStatusCode(), $response->getHeaders(), $response->getBody());
-        
-        //$response =$client->send($request);
- 
-        // echo copy_to_string($response->getBody());
-        // $res = new Response(copy_to_string($response->getBody()));
-        $res = new Response();
-        foreach ($response->getHeaders() as $name => $values) {
-        if($name != 'Transfer-Encoding') {
-        $res->headers->set($name, $values);
-        }
-        }
-
-        $res->headers->set('Location','/account');
-        $res->setStatusCode(302);
-*/
         // $client = new Client();
         // $response = $client->post(getenv('APP_URL').'/csrf/generate');
         // $responseBody = json_decode($response->getBody()->getContents(),true);
@@ -307,35 +206,43 @@ class FrontendController extends StoreFrontController
         }
         $res->setContent(copy_to_string($response->getBody()));
         return $res;
-        //$res->setContent(copy_to_string($response->getBody()));
-        //return $res->send();
-
-        //return $res;
-        
-        //echo copy_to_string($response->getBody()); in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ''' at line 1
-       // $res  = new Response(copy_to_string($response->getBody()));
-        //return $res;
-       // return new RedirectResponse(copy_to_string($request->), Response::HTTP_TEMPORARY_REDIRECT);
-       //$final = $this->generateUrl('frontend.account.login', ["method" => 'POST']);
-       //return new RedirectResponse($final, Response::HTTP_TEMPORARY_REDIRECT);
-        
-        //$view = $client->send($request);
-        //return $this->renderStorefront(copy_to_string($response->getBody()),[]);
-        //return $this->redirectToRoute('frontend.account.login',[$request,$context]);
-       // $body = json_decode($response->getBody()->getContents(), true);
-       // $code = $body['contextToken'];
-        //echo $code;
-        //$newrequest = new Request();
-       // return $this->redirectToRoute('frontend.account.profile.page', [$request, $context] );
-
-        
-        //$code = $body['contextToken'];
-        //echo $code;  
 
     }
 
+    /**
+     * @Route("/cidaas/logout", name="frontend.logout", methods={"GET"})
+     */
+    public function logout(Request $request, SalesChannelContext $context)
+    {
+        
+        // $client = new Client();
+        // echo $this->accessToken;
+        //  $client->get('https://cidaas-in-action.cidaas.de/session/end_session',[
+        //      'params' => [
+        //      'access_token_hint' => $this->accessToken['access_token'],
+        //      ]]);
 
-    
+        if ($context->getCustomer() === null) {
+            return $this->redirectToRoute('frontend.home.page');
+        }
+
+        try {
+            $this->logoutRoute->logout($context);
+            $salesChannelId = $context->getSalesChannel()->getId();
+            if ($request->hasSession() && $this->systemConfigService->get('core.loginRegistration.invalidateSessionOnLogOut', $salesChannelId)) {
+                $request->getSession()->invalidate();
+            }
+
+            $this->addFlash('success', $this->trans('account.logoutSucceeded'));
+
+            $parameters = [];
+        } catch (ConstraintViolationException $formViolations) {
+            $parameters = ['formViolations' => $formViolations];
+        }
+
+        return $this->redirectToRoute('frontend.home.page', $parameters);
+    }
+
 
     protected function getResourceOwner(AccessToken $token)
     {
@@ -365,27 +272,6 @@ class FrontendController extends StoreFrontController
 
     }
 
-    private function getDefaultPaymentMethod(): ?string
-    {
-        $id = $this->connection->executeQuery(
-            'SELECT `id` FROM `payment_method` WHERE `active` = 1 ORDER BY `position` ASC'
-        )->fetchColumn();
-
-        if (!$id) {
-            return null;
-        }
-
-        return Uuid::fromBytesToHex($id);
-    }
-
-    private function getRandomSalutationId(): string
-    {
-        if (!$this->salutationIds) {
-            $this->salutationIds = $this->connection->executeQuery('SELECT id FROM salutation')->fetchAll(FetchMode::COLUMN);
-        }
-
-        return $this->salutationIds[array_rand($this->salutationIds)];
-    }
 
     protected function array_flatten($array, $prefix = '')
     {
