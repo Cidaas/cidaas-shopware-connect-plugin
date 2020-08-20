@@ -2,40 +2,32 @@
 
 
 
+
+
 namespace Cidaas\OauthConnect\Controller;
 
-
 use Shopware\Core\Framework\Validation\Exception\ConstraintViolationException;
-
-
-
 
 use Shopware\Storefront\Page\Account\Login\AccountLoginPageLoader;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request as HttpRequest;
+
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Symfony\Component\HttpFoundation\Request ;
-use League\OAuth2\Client\Provider\GenericProvider;
-use League\OAuth2\Client\Token\AccessToken;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
 use Shopware\Core\Checkout\Customer\SalesChannel\AbstractLogoutRoute;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Shopware\Core\Framework\Uuid\Uuid;
-use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Storefront\Controller\StorefrontController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Routing\Route as RoutingRoute;
 
 use function GuzzleHttp\Psr7\copy_to_string;
 
@@ -52,14 +44,10 @@ class FrontendController extends StoreFrontController
     private $systemConfigService;
 
     /**
-     * @var EntityrepositorynInterface
+     * @var EntityrepositoryInterface
      */
     private $customerRepository;
 
-    /**
-     * @var GenericProvider
-     */
-    protected $provider;
 
     /**
      * @var Connection
@@ -98,7 +86,8 @@ class FrontendController extends StoreFrontController
     public function Cidaaslogin()
     {
         $provider = $this->getProvider();
-        $authorizationUrl = $provider->getAuthorizationUrl();
+        $authorizationUrl = $provider['urlAuthorize'].'?scope='.$provider['scopes'].'&response_type=code&approval_prompt=auto&redirect_uri=';
+        $authorizationUrl .= urlencode($provider['redirectUri']).'&client_id='.$provider['clientId'];
         return new RedirectResponse($authorizationUrl, Response::HTTP_TEMPORARY_REDIRECT);
         // redirect to authorizationURL
     }
@@ -109,7 +98,8 @@ class FrontendController extends StoreFrontController
     public function register()
     {
     $provider = $this->getProvider();
-    $authorizationUrl = $provider->getAuthorizationUrl();
+    $authorizationUrl = $provider['urlAuthorize'].'?scope='.$provider['scopes'].'&response_type=code&approval_prompt=auto&redirect_uri=';
+    $authorizationUrl .= $provider['redirectUri'].'&client_id='.$provider['clientId'];
     $authorizationUrl = $authorizationUrl.'&view_type=register';
     return new RedirectResponse($authorizationUrl, Response::HTTP_TEMPORARY_REDIRECT);
     // redirect to authorizationURL
@@ -120,15 +110,12 @@ class FrontendController extends StoreFrontController
      */
     public function redirectAfterResponse(Request $request, SalesChannelContext $context)
     {
-        $state = $request->query->get('state');
+        $provider = $this->getProvider();
         $code = $request->query->get('code');
-        $_SESSION["code"]=$code;
-        $accessToken = $this->getAccessToken($code);
-        $resourceOwner = $this->getResourceOwner($accessToken);
-        //echo implode(" ",$resourceOwner);
+        $accessToken = $this->getAccessToken($code,$provider);
+        $resourceOwner = $this->getResourceOwner($accessToken,$provider);
+
         $resourceOwner = $this->array_flatten($resourceOwner);
-        //$resourceOwner = json_encode($resourceOwner);
-        //echo $resourceOwner;
         $this->customerRepository = $this->container->get('customer.repository');
         
         $entities = $this->customerRepository->search(
@@ -184,18 +171,22 @@ class FrontendController extends StoreFrontController
 
         }
 
-        // $client = new Client();
-        // $response = $client->post(getenv('APP_URL').'/csrf/generate');
-        // $responseBody = json_decode($response->getBody()->getContents(),true);
-        // $csrf = $responseBody['token'];
-        // echo $csrf;
+        $client = new Client();
+        $response = $client->post(getenv('APP_URL').'/csrf/generate');
+        $cookie = $response->getHeader('Set-Cookie');
+        $responseBody = json_decode($response->getBody()->getContents(),true);
+        $csrf = $responseBody['token'];
+        
+        //echo $cookie[0];
         $client = new Client(['redirect.disable' => true]);
         $response = $client->post(getenv('APP_URL').'/account/login', [
         'form_params' => [
         'username' => $resourceOwner['email'],
         'password' => $password->{'sw_password'},
-        'redirectTo' => 'frontend.account.home.page'
+        'redirectTo' => 'frontend.account.home.page',
+        '_csrf_token' => $csrf
         ],
+        'headers' => ['Cookie' => $cookie],
         'allow_redirects' => false
         ]);
         $res = new Response();
@@ -215,12 +206,6 @@ class FrontendController extends StoreFrontController
     public function logout(Request $request, SalesChannelContext $context)
     {
         
-        // $client = new Client();
-        // echo $this->accessToken;
-        //  $client->get('https://cidaas-in-action.cidaas.de/session/end_session',[
-        //      'params' => [
-        //      'access_token_hint' => $this->accessToken['access_token'],
-        //      ]]);
 
         if ($context->getCustomer() === null) {
             return $this->redirectToRoute('frontend.home.page');
@@ -244,22 +229,47 @@ class FrontendController extends StoreFrontController
     }
 
 
-    protected function getResourceOwner(AccessToken $token)
+    protected function getResourceOwner($token,$provider)
     {
-       return  $this->getProvider()->getResourceOwner($token)->toArray();
+     $userAgent = $_SERVER['HTTP_USER_AGENT'].' cidaas-sw-plugin/1.0.1';
+     $client = new Client();
+     $response = $client->get($provider['urlResourceOwnerDetails'],[
+         'headers' => [
+            'content_type' => 'application/json',
+             'access_token' => $token['access_token'],
+             'user-agent' => $userAgent
+         ]
+     ]);
+     $responseBody = json_decode($response->getBody()->getContents(),true);
+     return $responseBody;
     }
 
 
-    protected function getAccessToken($code)
+    protected function getAccessToken($code, $provider)
     { 
-      $accessToken = $this->getProvider()->getAccessToken('authorization_code', [ 'code' => $code,]);
-      return $accessToken;
+     $userAgent = $_SERVER['HTTP_USER_AGENT'].' cidaas-sw-plugin/1.0.1';
+     $client = new Client();
+     $response = $client->post($provider['urlAccessToken'],[
+         'form_params' => [
+             'grant_type' => 'authorization_code',
+             'client_id' => $provider['clientId'],
+             'client_secret' => $provider['clientSecret'],
+             'code' => $code,
+             'redirect_uri' => $provider['redirectUri']
+         ],
+         'headers' => [
+             'content_type' => 'application/json',
+             'user_agent' => $userAgent
+         ]
+     ]);
+     $responseBody = json_decode($response->getBody()->getContents(),true);
+     return $responseBody;
     }
 
     protected function getProvider()
     {
         $redirectUri = getenv('APP_URL').'/cidaas/redirect';
-        $this->provider = new \League\OAuth2\Client\Provider\GenericProvider([
+        $this->provider = [
             'clientId' => $this->systemConfigService->get('CidaasOauthConnect.config.clientId'),
             'clientSecret' => $this->systemConfigService->get('CidaasOauthConnect.config.clientSecret'),
             'redirectUri' => $redirectUri,
@@ -267,7 +277,7 @@ class FrontendController extends StoreFrontController
             'urlAccessToken' => $this->systemConfigService->get('CidaasOauthConnect.config.tokenUri'),
             'urlResourceOwnerDetails' => $this->systemConfigService->get('CidaasOauthConnect.config.userUri'),
             'scopes' => "openid email profile",
-        ]);
+        ];
         return $this->provider;
 
     }
