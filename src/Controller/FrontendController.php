@@ -232,12 +232,16 @@ class FrontendController extends StoreFrontController
     protected function getResourceOwner($token,$provider)
     {
      $userAgent = $_SERVER['HTTP_USER_AGENT'].' cidaas-sw-plugin/1.0.1';
+     $acceptlanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+     $host = $_SERVER['HTTP_HOST'];
      $client = new Client();
      $response = $client->get($provider['urlResourceOwnerDetails'],[
          'headers' => [
             'content_type' => 'application/json',
+            'accept_language' => $acceptlanguage,
              'access_token' => $token['access_token'],
-             'user-agent' => $userAgent
+             'user_agent' => $userAgent,
+             
          ]
      ]);
      $responseBody = json_decode($response->getBody()->getContents(),true);
@@ -248,6 +252,8 @@ class FrontendController extends StoreFrontController
     protected function getAccessToken($code, $provider)
     { 
      $userAgent = $_SERVER['HTTP_USER_AGENT'].' cidaas-sw-plugin/1.0.1';
+     $acceptlanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+     $host = $_SERVER['HTTP_HOST'];
      $client = new Client();
      $response = $client->post($provider['urlAccessToken'],[
          'form_params' => [
@@ -259,7 +265,9 @@ class FrontendController extends StoreFrontController
          ],
          'headers' => [
              'content_type' => 'application/json',
-             'user_agent' => $userAgent
+             'accept_language' => $acceptlanguage,
+             'user_agent' => $userAgent,
+             
          ]
      ]);
      $responseBody = json_decode($response->getBody()->getContents(),true);
