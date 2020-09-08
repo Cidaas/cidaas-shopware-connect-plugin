@@ -191,7 +191,7 @@ class CidaasController extends StorefrontController
         try {
             $this->logoutRoute->logout($context);
             $salesChannelId = $context->getSalesChannel()->getId();
-            if ($request->hasSession() && $this->systemConfigService->get('core.loginRegistration.invalidateSessionOnLogOut', $salesChannelId)) {
+            if ($request->hasSession() && $this->systemConfig->get('core.loginRegistration.invalidateSessionOnLogOut', $salesChannelId)) {
                 $request->getSession()->invalidate();
             }
 
