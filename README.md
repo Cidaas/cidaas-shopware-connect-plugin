@@ -6,7 +6,7 @@
 
 - Move plugin to custom/plugins
 - Run bin/console plugin:update
-- Run bin/console plugin:install --activate CidaasOpenAuth
+- Run bin/console plugin:install --activate CidaasOauthConnect
 - Run bin/console cache:clear
 
 ### Create Your Client In Cidaas
