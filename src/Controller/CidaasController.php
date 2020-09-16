@@ -58,10 +58,21 @@ class CidaasController extends StorefrontController
      */
     private $registerRoute;
 
+    /**
+     * @var AbstractRegisterRoute
+     */
+    private $state;
+
      /**
      * @var Connection
      */
     protected $connection;
+
+    /**
+	  * @var string
+	  */
+	  private $state;
+
 
     public function __construct(
         AbstractLoginRoute $loginRoute,
@@ -77,6 +88,7 @@ class CidaasController extends StorefrontController
         $this->customerRepository = $customerRepository;
         $this->registerRoute = $registerRoute;
         $this->connection = $connection;
+        $this->state = generateRandomString();
 
     }
 
@@ -89,7 +101,7 @@ class CidaasController extends StorefrontController
         $provider = $this->getProvider();
         $authorizationUrl = $provider['urlAuthorize'].'?scope='.$provider['scopes'].'&response_type=code&approval_prompt=auto&redirect_uri=';
         $authorizationUrl .= urlencode($provider['redirectUri']).'&client_id='.$provider['clientId'];
-        $authorizationUrl .= '&state='.$provider['state'];
+        $authorizationUrl .= '&state='.$this->state;
         return new RedirectResponse($authorizationUrl, Response::HTTP_TEMPORARY_REDIRECT);
         // redirect to authorizationURL
     }
@@ -103,7 +115,7 @@ class CidaasController extends StorefrontController
     $authorizationUrl = $provider['urlAuthorize'].'?scope='.$provider['scopes'].'&response_type=code&approval_prompt=auto&redirect_uri=';
     $authorizationUrl .= $provider['redirectUri'].'&client_id='.$provider['clientId'];
     $authorizationUrl .= '&view_type=register';
-    $authorizationUrl .= '&state='.$provider['state'];
+    $authorizationUrl .= '&state='.$this->state;
     return new RedirectResponse($authorizationUrl, Response::HTTP_TEMPORARY_REDIRECT);
     // redirect to authorizationURL
     }
@@ -119,9 +131,11 @@ class CidaasController extends StorefrontController
         //TODO:Error-HANDLING if no code - then we cannot continue
         //Get authorization code
         $code = $request->query->get('code');
+        $reqState = $request->query->get('state');
+        if(!$reqState === $this->state){
+          throw new RuntimeException('not matching state');
+        }
 
-
-        //TODO:Error-HANDLING if accessToken not available we cannot continue, this means the user was not created in cidaas right?
         //Get access token
         $accessToken = $this->getAccessToken($code,$provider,$request);
 
@@ -191,7 +205,6 @@ class CidaasController extends StorefrontController
             }
         } catch (BadCredentialsException | UnauthorizedHttpException | InactiveCustomerException $e) {
             if ($e instanceof InactiveCustomerException) {
-                //TODO: we should log it?
                 $errorSnippet = $e->getSnippetKey();
             }
         }
@@ -283,7 +296,6 @@ class CidaasController extends StorefrontController
             'urlAccessToken' => $this->systemConfig->get('CidaasOauthConnect.config.tokenUri'),
             'urlResourceOwnerDetails' => $this->systemConfig->get('CidaasOauthConnect.config.userUri'),
             'scopes' => "openid email profile",
-            'state' => generateRandomString(),
         ];
         return $provider;
     }
