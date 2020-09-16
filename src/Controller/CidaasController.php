@@ -172,7 +172,7 @@ class CidaasController extends StorefrontController
 
             $salutationId = $queryBuilderCountry->execute()->fetchAll(FetchMode::COLUMN);
 
-            //TODO:Error-HANDLING if values not available
+            //TODO:Error-HANDLING if values not available, what happens if accessing those values, and they are not there? is it ok?
             $data = new RequestDataBag([
                 "guest" => false,
                 "salutationId" => Uuid::fromBytesToHex($salutationId[0]),
