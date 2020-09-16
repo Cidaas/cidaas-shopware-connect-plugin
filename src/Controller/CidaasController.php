@@ -83,6 +83,8 @@ class CidaasController extends StorefrontController
      /**
      * @Route ("/cidaas/login", name="cidaas.login", methods={"GET"})
      */
+     //ERROR HANDLING  - if urlAUth not available - cidaas Connector nicht richtig configuriert - scopes nicht gesetzt, dann default openid, urlAuth --> fehler page
+     //ERROR - Random String --> validate that State is same
     public function Cidaaslogin()
     {
         $provider = $this->getProvider();
@@ -95,6 +97,7 @@ class CidaasController extends StorefrontController
     /**
      * @Route ("/cidaas/register", name="cidaas.register", methods={"GET"})
      */
+     //ERROR HANDLING  - if urlAUth not available
     public function register()
     {
     $provider = $this->getProvider();
@@ -113,16 +116,21 @@ class CidaasController extends StorefrontController
     {
         $provider = $this->getProvider();
 
+        //Error-HANDLING if no code
         //Get authorization code
         $code = $request->query->get('code');
 
+
+        //Error-HANDLING if not 200
         //Get access token
         $accessToken = $this->getAccessToken($code,$provider);
 
+        //Error-HANDLING if not 200
         //Get resource owner details
         $resourceOwner = $this->getResourceOwner($accessToken,$provider);
         $resourceOwner = $this->array_flatten($resourceOwner);
 
+        //Error-HANDLING if customerRepository not available
         //Search the db for user
         $this->customerRepository = $this->container->get('customer.repository');
         $entities = $this->customerRepository->search(
@@ -134,13 +142,24 @@ class CidaasController extends StorefrontController
 
         //If user not found then register
         if(empty($entity))
-        {  
-            $countries = $this->connection
-            ->executeQuery("SELECT country_id FROM country_translation WHERE name = '". $resourceOwner["billing_address_country"]. "' ")
-            ->fetchAll(FetchMode::COLUMN);
-            
-            $salutationId = $this->connection->executeQuery("SELECT id FROM salutation WHERE  salutation_key  = '". $resourceOwner["salutation"]. "' ")->fetchAll(FetchMode::COLUMN);
-             $data = new RequestDataBag([ 
+        {
+            $queryBuilderCountry = $this->connection->createQueryBuilder();
+            $queryBuilderCountry->select('country_id')
+                ->from('country_translation')
+                ->where('name = :name')
+                ->setParameter('name', $resourceOwner['billing_address_country']);
+            $countries = $queryBuilderCountry->execute()->fetchAll(FetchMode::COLUMN);
+
+            $queryBuilderSalutation = $this->connection->createQueryBuilder();
+            $queryBuilderSalutation->select('id')
+                ->from('salutation')
+                ->where('salutation_key = :salutation_key')
+                ->setParameter('salutation_key', $resourceOwner['salutation']);
+
+            $salutationId = $queryBuilderCountry->execute()->fetchAll(FetchMode::COLUMN);
+
+            //Error-HANDLING if values not available
+            $data = new RequestDataBag([
                 "guest" => false,
                 "salutationId" => Uuid::fromBytesToHex($salutationId[0]),
                 "firstName" => $resourceOwner['given_name'],
@@ -155,15 +174,16 @@ class CidaasController extends StorefrontController
                     "zipcode" => $resourceOwner['billing_address_zipcode'],
                     "city" => $resourceOwner['billing_address_city']
                 ),
-                "storefrontUrl" => getenv('APP_URL'),   
+                "storefrontUrl" => getenv('APP_URL'),
              ]);
+
           $cust = $this->registerRoute->register($data, $context, true );
         }
-
+        //Error-HANDLING if req fails
         //login the user
         $req = Request::create('/account/login','POST',['redirectTo'=>'frontend.account.home.page']);
         $data = new RequestDataBag(['username' => $resourceOwner['email'],'password'=> $password->{'sw_password'}]);
-        
+
         try {
             $token = $this->loginRoute->login($data, $context)->getToken();
             if (!empty($token)) {
@@ -182,7 +202,7 @@ class CidaasController extends StorefrontController
      */
     public function logout(Request $request, SalesChannelContext $context)
     {
-        
+
 
         if ($context->getCustomer() === null) {
             return $this->redirectToRoute('frontend.home.page');
@@ -218,7 +238,7 @@ class CidaasController extends StorefrontController
             'accept_language' => $acceptlanguage,
              'access_token' => $token['access_token'],
              'user_agent' => $userAgent,
-             
+
          ]
      ]);
      $responseBody = json_decode($response->getBody()->getContents(),true);
@@ -227,7 +247,7 @@ class CidaasController extends StorefrontController
 
 
     protected function getAccessToken($code, $provider)
-    { 
+    {
      $userAgent = $_SERVER['HTTP_USER_AGENT'].' cidaas-sw-plugin/1.0.1';
      $acceptlanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
      $host = $_SERVER['HTTP_HOST'];
@@ -244,7 +264,7 @@ class CidaasController extends StorefrontController
              'content_type' => 'application/json',
              'accept_language' => $acceptlanguage,
              'user_agent' => $userAgent,
-             
+
          ]
      ]);
      $responseBody = json_decode($response->getBody()->getContents(),true);
@@ -266,20 +286,20 @@ class CidaasController extends StorefrontController
         return $provider;
 
     }
-    
+
 
 
     protected function array_flatten($array, $prefix = '')
     {
-    
-       $result = array();   
-         
+
+       $result = array();
+
     foreach($array as $key=>$value) {
-         
+
             if(is_array($value) && $key !== "roles") {
-                
+
                 $result = $result + $this->array_flatten($value);
-                
+
             }
             else {
                 $result[$key] = $value;
@@ -287,7 +307,7 @@ class CidaasController extends StorefrontController
         }
         return $result;
     }
-    
+
 
 
 }
