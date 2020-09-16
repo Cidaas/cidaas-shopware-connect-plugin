@@ -104,7 +104,8 @@ class CidaasController extends StorefrontController
     $provider = $this->getProvider();
     $authorizationUrl = $provider['urlAuthorize'].'?scope='.$provider['scopes'].'&response_type=code&approval_prompt=auto&redirect_uri=';
     $authorizationUrl .= $provider['redirectUri'].'&client_id='.$provider['clientId'];
-    $authorizationUrl = $authorizationUrl.'&view_type=register';
+    $authorizationUrl .= '&view_type=register';
+    $authorizationUrl .= '&state='.$provider['state'];
     return new RedirectResponse($authorizationUrl, Response::HTTP_TEMPORARY_REDIRECT);
     // redirect to authorizationURL
     }
