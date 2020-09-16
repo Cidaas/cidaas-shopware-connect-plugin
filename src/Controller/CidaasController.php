@@ -90,6 +90,7 @@ class CidaasController extends StorefrontController
         $provider = $this->getProvider();
         $authorizationUrl = $provider['urlAuthorize'].'?scope='.$provider['scopes'].'&response_type=code&approval_prompt=auto&redirect_uri=';
         $authorizationUrl .= urlencode($provider['redirectUri']).'&client_id='.$provider['clientId'];
+        $authorizationUrl .= '&state='.$provider['state'];
         return new RedirectResponse($authorizationUrl, Response::HTTP_TEMPORARY_REDIRECT);
         // redirect to authorizationURL
     }
@@ -282,6 +283,7 @@ class CidaasController extends StorefrontController
             'urlAccessToken' => $this->systemConfig->get('CidaasOauthConnect.config.tokenUri'),
             'urlResourceOwnerDetails' => $this->systemConfig->get('CidaasOauthConnect.config.userUri'),
             'scopes' => "openid email profile",
+            'state' => generateRandomString(),
         ];
         return $provider;
 
@@ -308,6 +310,9 @@ class CidaasController extends StorefrontController
         return $result;
     }
 
+    protected function generateRandomString($length = 11) {
+      return substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length/strlen($x)) )),1,$length);
+    }
 
 
 }
