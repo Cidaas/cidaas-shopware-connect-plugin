@@ -83,8 +83,7 @@ class CidaasController extends StorefrontController
      /**
      * @Route ("/cidaas/login", name="cidaas.login", methods={"GET"})
      */
-     //ERROR HANDLING  - if urlAUth not available - cidaas Connector nicht richtig configuriert - scopes nicht gesetzt, dann default openid, urlAuth --> fehler page
-     //ERROR - Random String --> validate that State is same
+
     public function Cidaaslogin()
     {
         $provider = $this->getProvider();
@@ -98,7 +97,6 @@ class CidaasController extends StorefrontController
     /**
      * @Route ("/cidaas/register", name="cidaas.register", methods={"GET"})
      */
-     //ERROR HANDLING  - if urlAUth not available
     public function register()
     {
     $provider = $this->getProvider();
@@ -118,21 +116,21 @@ class CidaasController extends StorefrontController
     {
         $provider = $this->getProvider();
 
-        //Error-HANDLING if no code
+        //TODO:Error-HANDLING if no code - then we cannot continue
         //Get authorization code
         $code = $request->query->get('code');
 
 
-        //Error-HANDLING if not 200
+        //TODO:Error-HANDLING if accessToken not available we cannot continue, this means the user was not created in cidaas right?
         //Get access token
         $accessToken = $this->getAccessToken($code,$provider,$request);
 
-        //Error-HANDLING if not 200
+        //TODO:Error-HANDLING if ressourceOwner not available we cannot continue, this might lead to duplicated entries in db
         //Get resource owner details
         $resourceOwner = $this->getResourceOwner($accessToken,$provider,$request);
         $resourceOwner = $this->array_flatten($resourceOwner);
 
-        //Error-HANDLING if customerRepository not available
+        //TODO:Error-HANDLING if customerRepository not available - maybe database not available, then we also cannot continue, might lead to conflicting data
         //Search the db for user
         $this->customerRepository = $this->container->get('customer.repository');
         $entities = $this->customerRepository->search(
@@ -160,7 +158,7 @@ class CidaasController extends StorefrontController
 
             $salutationId = $queryBuilderCountry->execute()->fetchAll(FetchMode::COLUMN);
 
-            //Error-HANDLING if values not available
+            //TODO:Error-HANDLING if values not available
             $data = new RequestDataBag([
                 "guest" => false,
                 "salutationId" => Uuid::fromBytesToHex($salutationId[0]),
@@ -181,7 +179,7 @@ class CidaasController extends StorefrontController
 
           $cust = $this->registerRoute->register($data, $context, true );
         }
-        //Error-HANDLING if req fails
+        //TODO:Error-HANDLING if req fails, we are not creating the user in the database right?
         //login the user
         $req = Request::create('/account/login','POST',['redirectTo'=>'frontend.account.home.page']);
         $data = new RequestDataBag(['username' => $resourceOwner['email'],'password'=> $password->{'sw_password'}]);
@@ -193,6 +191,7 @@ class CidaasController extends StorefrontController
             }
         } catch (BadCredentialsException | UnauthorizedHttpException | InactiveCustomerException $e) {
             if ($e instanceof InactiveCustomerException) {
+                //TODO: we should log it?
                 $errorSnippet = $e->getSnippetKey();
             }
         }
@@ -234,13 +233,14 @@ class CidaasController extends StorefrontController
      $acceptlanguage = $request->headers->get('Accept');
      $host = $request->headers->get('Host');
      $client = new Client();
+     //TODO:ERROR Handling we cannot expect to always receive a ressourceOwner, what happens with json_decode if not
      $response = $client->get($provider['urlResourceOwnerDetails'],[
          'headers' => [
             'content_type' => 'application/json',
             'accept_language' => $acceptlanguage,
              'access_token' => $token['access_token'],
              'user_agent' => $userAgent,
-
+             'host' => $host,
          ]
      ]);
      $responseBody = json_decode($response->getBody()->getContents(),true);
@@ -248,12 +248,12 @@ class CidaasController extends StorefrontController
     }
 
 
-    protected function getAccessToken($code, $provider,$request)
-    {
+    protected function getAccessToken($code, $provider,$request) {
     $userAgent = $request->headers->get('User-Agent').' cidaas-sw-plugin/1.0.1';
     $acceptlanguage = $request->headers->get('Accept');
     $host = $request->headers->get('Host');
     $client = new Client();
+    //TODO:ERROR Handling we cannot expect to always receive a accesstoken, what happens with json_decode if not
     $response = $client->post($provider['urlAccessToken'],[
          'form_params' => [
              'grant_type' => 'authorization_code',
@@ -266,15 +266,14 @@ class CidaasController extends StorefrontController
              'content_type' => 'application/json',
              'accept_language' => $acceptlanguage,
              'user_agent' => $userAgent,
-
+             'host' => $host,
          ]
      ]);
      $responseBody = json_decode($response->getBody()->getContents(),true);
      return $responseBody;
     }
 
-    protected function getProvider()
-    {
+    protected function getProvider() {
         $redirectUri = getenv('APP_URL').'/cidaas/redirect';
         $provider = [
             'clientId' => $this->systemConfig->get('CidaasOauthConnect.config.clientId'),
@@ -287,13 +286,11 @@ class CidaasController extends StorefrontController
             'state' => generateRandomString(),
         ];
         return $provider;
-
     }
 
 
 
-    protected function array_flatten($array, $prefix = '')
-    {
+    protected function array_flatten($array, $prefix = '') {
 
        $result = array();
 
