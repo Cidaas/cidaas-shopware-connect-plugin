@@ -125,11 +125,11 @@ class CidaasController extends StorefrontController
 
         //Error-HANDLING if not 200
         //Get access token
-        $accessToken = $this->getAccessToken($code,$provider);
+        $accessToken = $this->getAccessToken($code,$provider,$request);
 
         //Error-HANDLING if not 200
         //Get resource owner details
-        $resourceOwner = $this->getResourceOwner($accessToken,$provider);
+        $resourceOwner = $this->getResourceOwner($accessToken,$provider,$request);
         $resourceOwner = $this->array_flatten($resourceOwner);
 
         //Error-HANDLING if customerRepository not available
@@ -228,11 +228,11 @@ class CidaasController extends StorefrontController
     }
 
 
-    protected function getResourceOwner($token, $provider)
+    protected function getResourceOwner($token, $provider, $request)
     {
-     $userAgent = $_SERVER['HTTP_USER_AGENT'].' cidaas-sw-plugin/1.0.1';
-     $acceptlanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
-     $host = $_SERVER['HTTP_HOST'];
+     $userAgent = $request->headers->get('User-Agent').' cidaas-sw-plugin/1.0.1';
+     $acceptlanguage = $request->headers->get('Accept');
+     $host = $request->headers->get('Host');
      $client = new Client();
      $response = $client->get($provider['urlResourceOwnerDetails'],[
          'headers' => [
@@ -248,13 +248,13 @@ class CidaasController extends StorefrontController
     }
 
 
-    protected function getAccessToken($code, $provider)
+    protected function getAccessToken($code, $provider,$request)
     {
-     $userAgent = $_SERVER['HTTP_USER_AGENT'].' cidaas-sw-plugin/1.0.1';
-     $acceptlanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
-     $host = $_SERVER['HTTP_HOST'];
-     $client = new Client();
-     $response = $client->post($provider['urlAccessToken'],[
+    $userAgent = $request->headers->get('User-Agent').' cidaas-sw-plugin/1.0.1';
+    $acceptlanguage = $request->headers->get('Accept');
+    $host = $request->headers->get('Host');
+    $client = new Client();
+    $response = $client->post($provider['urlAccessToken'],[
          'form_params' => [
              'grant_type' => 'authorization_code',
              'client_id' => $provider['clientId'],
