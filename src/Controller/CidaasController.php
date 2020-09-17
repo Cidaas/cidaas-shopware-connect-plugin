@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use GuzzleHttp\Client;
+use RuntimeException;
 use Shopware\Core\Checkout\Customer\SalesChannel\AbstractLoginRoute;
 use Shopware\Core\Checkout\Customer\SalesChannel\AbstractLogoutRoute;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
@@ -58,20 +59,15 @@ class CidaasController extends StorefrontController
      */
     private $registerRoute;
 
-    /**
-     * @var AbstractRegisterRoute
-     */
-    private $state;
-
      /**
      * @var Connection
      */
     protected $connection;
 
     /**
-	  * @var string
-	  */
-	  private $state;
+	* @var string
+	*/
+	private $state;
 
 
     public function __construct(
@@ -88,7 +84,7 @@ class CidaasController extends StorefrontController
         $this->customerRepository = $customerRepository;
         $this->registerRoute = $registerRoute;
         $this->connection = $connection;
-        $this->state = generateRandomString();
+        
 
     }
 
@@ -99,6 +95,7 @@ class CidaasController extends StorefrontController
     public function Cidaaslogin()
     {
         $provider = $this->getProvider();
+        $this->state = $this->generateRandomString();
         $authorizationUrl = $provider['urlAuthorize'].'?scope='.$provider['scopes'].'&response_type=code&approval_prompt=auto&redirect_uri=';
         $authorizationUrl .= urlencode($provider['redirectUri']).'&client_id='.$provider['clientId'];
         $authorizationUrl .= '&state='.$this->state;
@@ -112,6 +109,7 @@ class CidaasController extends StorefrontController
     public function register()
     {
     $provider = $this->getProvider();
+    $this->state = $this->generateRandomString();
     $authorizationUrl = $provider['urlAuthorize'].'?scope='.$provider['scopes'].'&response_type=code&approval_prompt=auto&redirect_uri=';
     $authorizationUrl .= $provider['redirectUri'].'&client_id='.$provider['clientId'];
     $authorizationUrl .= '&view_type=register';
@@ -163,15 +161,13 @@ class CidaasController extends StorefrontController
                 ->where('name = :name')
                 ->setParameter('name', $resourceOwner['billing_address_country']);
             $countries = $queryBuilderCountry->execute()->fetchAll(FetchMode::COLUMN);
-
             $queryBuilderSalutation = $this->connection->createQueryBuilder();
             $queryBuilderSalutation->select('id')
                 ->from('salutation')
                 ->where('salutation_key = :salutation_key')
                 ->setParameter('salutation_key', $resourceOwner['salutation']);
 
-            $salutationId = $queryBuilderCountry->execute()->fetchAll(FetchMode::COLUMN);
-
+            $salutationId = $queryBuilderSalutation->execute()->fetchAll(FetchMode::COLUMN);
             //TODO:Error-HANDLING if values not available, what happens if accessing those values, and they are not there? is it ok?
             $data = new RequestDataBag([
                 "guest" => false,
@@ -252,8 +248,7 @@ class CidaasController extends StorefrontController
             'content_type' => 'application/json',
             'accept_language' => $acceptlanguage,
              'access_token' => $token['access_token'],
-             'user_agent' => $userAgent,
-             'host' => $host,
+             'user_agent' => $userAgent
          ]
      ]);
      $responseBody = json_decode($response->getBody()->getContents(),true);
@@ -279,7 +274,6 @@ class CidaasController extends StorefrontController
              'content_type' => 'application/json',
              'accept_language' => $acceptlanguage,
              'user_agent' => $userAgent,
-             'host' => $host,
          ]
      ]);
      $responseBody = json_decode($response->getBody()->getContents(),true);
@@ -320,8 +314,14 @@ class CidaasController extends StorefrontController
         return $result;
     }
 
-    protected function generateRandomString($length = 11) {
-      return substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length/strlen($x)) )),1,$length);
+    protected function generateRandomString($length = 10) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
     }
 
 
