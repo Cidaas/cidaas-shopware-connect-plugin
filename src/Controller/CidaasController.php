@@ -2,6 +2,9 @@
 
 namespace Cidaas\OauthConnect\Controller;
 
+use GuzzleHttp\Exception\ClientException;
+
+
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
@@ -13,7 +16,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use GuzzleHttp\Client;
-use RuntimeException;
 use Shopware\Core\Checkout\Customer\SalesChannel\AbstractLoginRoute;
 use Shopware\Core\Checkout\Customer\SalesChannel\AbstractLogoutRoute;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
@@ -64,9 +66,6 @@ class CidaasController extends StorefrontController
      */
     protected $connection;
 
-    /**
-	* @var string
-	*/
 	private $state;
 
 
@@ -126,23 +125,94 @@ class CidaasController extends StorefrontController
     {
         $provider = $this->getProvider();
 
-        //TODO:Error-HANDLING if no code - then we cannot continue
         //Get authorization code
-        $code = $request->query->get('code');
+        $code = $request->query->get('code'); 
+        if(empty($code))
+        {
+            $errorSnippet = "Login error : Error in receiving authorization code" ;
+            $this->addFlash('danger',$errorSnippet);
+            return $this->forwardToRoute(
+                'frontend.home.page',
+                [
+                    'loginError' => true,
+                    'errorSnippet' => $errorSnippet ?? null,
+                ]
+            );
+        }
         $reqState = $request->query->get('state');
         if(!$reqState === $this->state){
-          throw new RuntimeException('not matching state');
+            $errorSnippet = "Login error : State mismatch" ;
+            $this->addFlash('danger',$errorSnippet);
+            return $this->forwardToRoute(
+                'frontend.home.page',
+                [
+                    'loginError' => true,
+                    'errorSnippet' => $errorSnippet ?? null,
+                ]
+            );
         }
 
         //Get access token
+        
         $accessToken = $this->getAccessToken($code,$provider,$request);
-
-        //TODO:Error-HANDLING if ressourceOwner not available we cannot continue, this might lead to duplicated entries in db
+        
+        if(isset($accessToken['error']))
+        {
+            $errorSnippet = $accessToken['error_description'] ;
+            $this->addFlash('danger',$errorSnippet);
+            return $this->forwardToRoute(
+                'frontend.home.page',
+                [
+                    'loginError' => true,
+                    'errorSnippet' => $errorSnippet ?? null,
+                ]
+            );
+        }
+        
         //Get resource owner details
         $resourceOwner = $this->getResourceOwner($accessToken,$provider,$request);
+        if(isset($resourceOwner['error']))
+        {
+            $errorSnippet = 'Error retrieving resource owner :'.$resourceOwner['error'] ;
+            $this->addFlash('danger',$errorSnippet);
+            return $this->forwardToRoute(
+                'frontend.home.page',
+                [
+                    'loginError' => true,
+                    'errorSnippet' => $errorSnippet ?? null,
+                ]
+            );
+        }
         $resourceOwner = $this->array_flatten($resourceOwner);
 
-        //TODO:Error-HANDLING if customerRepository not available - maybe database not available, then we also cannot continue, might lead to conflicting data
+        //Check whether all required fields are present
+        $requiredfields = ['salutation','billing_address_country','given_name','family_name','email','sw_cred','billing_address_street','billing_address_zipcode','billing_address_city'];
+            $errors = [];
+            foreach($requiredfields as $field)
+            {
+                if(!isset($resourceOwner[$field]) || empty($resourceOwner[$field]))
+                {
+                    array_push($errors,$field);
+                }
+            }
+            if(!empty($errors))
+            {
+                $errorlist="";
+                foreach($errors as $error)
+                {
+                    $errorlist.=$error." ";
+                }
+                $errormessage = "Error in registartion, ".count($errors)." fields are missing :".$errorlist;
+                $this->addFlash('danger',$errormessage);
+                return $this->forwardToRoute(
+                    'frontend.home.page',
+                    [
+                        'loginError' => true,
+                        'errorSnippet' => $errormessage ?? null,
+                    ]
+                );
+            }
+        
         //Search the db for user
         $this->customerRepository = $this->container->get('customer.repository');
         $entities = $this->customerRepository->search(
@@ -155,6 +225,7 @@ class CidaasController extends StorefrontController
         //If user not found then register
         if(empty($entity))
         {
+            
             $queryBuilderCountry = $this->connection->createQueryBuilder();
             $queryBuilderCountry->select('country_id')
                 ->from('country_translation')
@@ -168,7 +239,7 @@ class CidaasController extends StorefrontController
                 ->setParameter('salutation_key', $resourceOwner['salutation']);
 
             $salutationId = $queryBuilderSalutation->execute()->fetchAll(FetchMode::COLUMN);
-            //TODO:Error-HANDLING if values not available, what happens if accessing those values, and they are not there? is it ok?
+
             $data = new RequestDataBag([
                 "guest" => false,
                 "salutationId" => Uuid::fromBytesToHex($salutationId[0]),
@@ -186,10 +257,23 @@ class CidaasController extends StorefrontController
                 ),
                 "storefrontUrl" => getenv('APP_URL'),
              ]);
-
-          $cust = $this->registerRoute->register($data, $context, true );
+        try{
+          $this->registerRoute->register($data, $context, true);
+         }
+         catch(ConstraintViolationException $formViolations)
+         {
+             $errorSnippet = $formViolations->getMessage();
+             $this->addFlash('danger','Error in Registration: '.$errorSnippet);
+                return $this->forwardToRoute(
+                    'frontend.home.page',
+                    [
+                        'loginError' => true,
+                        'errorSnippet' => $errorSnippet ?? null,
+                    ]
+                );
+         }
         }
-        //TODO:Error-HANDLING if req fails, we are not creating the user in the database right?
+        
         //login the user
         $req = Request::create('/account/login','POST',['redirectTo'=>'frontend.account.home.page']);
         $data = new RequestDataBag(['username' => $resourceOwner['email'],'password'=> $password->{'sw_password'}]);
@@ -204,6 +288,16 @@ class CidaasController extends StorefrontController
                 $errorSnippet = $e->getSnippetKey();
             }
         }
+
+        $data->set('password', null);
+        $this->addFlash('danger','Failed to login the user');
+        return $this->forwardToRoute(
+            'frontend.home.page',
+            [
+                'loginError' => true,
+                'errorSnippet' => $errorSnippet ?? null,
+            ]
+        );
 
     }
 
@@ -240,9 +334,9 @@ class CidaasController extends StorefrontController
     {
      $userAgent = $request->headers->get('User-Agent').' cidaas-sw-plugin/1.0.1';
      $acceptlanguage = $request->headers->get('Accept');
-     $host = $request->headers->get('Host');
      $client = new Client();
      //TODO:ERROR Handling we cannot expect to always receive a ressourceOwner, what happens with json_decode if not
+     try{
      $response = $client->get($provider['urlResourceOwnerDetails'],[
          'headers' => [
             'content_type' => 'application/json',
@@ -251,6 +345,12 @@ class CidaasController extends StorefrontController
              'user_agent' => $userAgent
          ]
      ]);
+         }
+         catch(ClientException $e) {
+             $errormessage = json_decode($e->getResponse()->getBody()->getContents());
+             $error = (array) $errormessage;
+             return $error; 
+         }
      $responseBody = json_decode($response->getBody()->getContents(),true);
      return $responseBody;
     }
@@ -259,9 +359,8 @@ class CidaasController extends StorefrontController
     protected function getAccessToken($code, $provider,$request) {
     $userAgent = $request->headers->get('User-Agent').' cidaas-sw-plugin/1.0.1';
     $acceptlanguage = $request->headers->get('Accept');
-    $host = $request->headers->get('Host');
     $client = new Client();
-    //TODO:ERROR Handling we cannot expect to always receive a accesstoken, what happens with json_decode if not
+    try {
     $response = $client->post($provider['urlAccessToken'],[
          'form_params' => [
              'grant_type' => 'authorization_code',
@@ -276,8 +375,14 @@ class CidaasController extends StorefrontController
              'user_agent' => $userAgent,
          ]
      ]);
-     $responseBody = json_decode($response->getBody()->getContents(),true);
-     return $responseBody;
+         }
+         catch (ClientException $e) {
+            $errormessage = json_decode($e->getResponse()->getBody()->getContents());
+            $error = (array) $errormessage;
+            return $error;
+        }
+        $responseBody = json_decode($response->getBody()->getContents(),true);
+        return $responseBody;
     }
 
     protected function getProvider() {
