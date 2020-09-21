@@ -2,6 +2,9 @@
 
 namespace Cidaas\OauthConnect\Controller;
 
+use GuzzleHttp\Exception\ClientException;
+
+
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
@@ -63,6 +66,9 @@ class CidaasController extends StorefrontController
      */
     protected $connection;
 
+	private $state;
+
+
     public function __construct(
         AbstractLoginRoute $loginRoute,
         SystemConfigService $systemConfig,
@@ -77,17 +83,21 @@ class CidaasController extends StorefrontController
         $this->customerRepository = $customerRepository;
         $this->registerRoute = $registerRoute;
         $this->connection = $connection;
+        
 
     }
 
      /**
      * @Route ("/cidaas/login", name="cidaas.login", methods={"GET"})
      */
+
     public function Cidaaslogin()
     {
         $provider = $this->getProvider();
+        $this->state = $this->generateRandomString();
         $authorizationUrl = $provider['urlAuthorize'].'?scope='.$provider['scopes'].'&response_type=code&approval_prompt=auto&redirect_uri=';
         $authorizationUrl .= urlencode($provider['redirectUri']).'&client_id='.$provider['clientId'];
+        $authorizationUrl .= '&state='.$this->state;
         return new RedirectResponse($authorizationUrl, Response::HTTP_TEMPORARY_REDIRECT);
         // redirect to authorizationURL
     }
@@ -98,9 +108,11 @@ class CidaasController extends StorefrontController
     public function register()
     {
     $provider = $this->getProvider();
+    $this->state = $this->generateRandomString();
     $authorizationUrl = $provider['urlAuthorize'].'?scope='.$provider['scopes'].'&response_type=code&approval_prompt=auto&redirect_uri=';
     $authorizationUrl .= $provider['redirectUri'].'&client_id='.$provider['clientId'];
-    $authorizationUrl = $authorizationUrl.'&view_type=register';
+    $authorizationUrl .= '&view_type=register';
+    $authorizationUrl .= '&state='.$this->state;
     return new RedirectResponse($authorizationUrl, Response::HTTP_TEMPORARY_REDIRECT);
     // redirect to authorizationURL
     }
@@ -114,15 +126,93 @@ class CidaasController extends StorefrontController
         $provider = $this->getProvider();
 
         //Get authorization code
-        $code = $request->query->get('code');
+        $code = $request->query->get('code'); 
+        if(empty($code))
+        {
+            $errorSnippet = "Login error : Error in receiving authorization code" ;
+            $this->addFlash('danger',$errorSnippet);
+            return $this->forwardToRoute(
+                'frontend.home.page',
+                [
+                    'loginError' => true,
+                    'errorSnippet' => $errorSnippet ?? null,
+                ]
+            );
+        }
+        $reqState = $request->query->get('state');
+        if(!$reqState === $this->state){
+            $errorSnippet = "Login error : State mismatch" ;
+            $this->addFlash('danger',$errorSnippet);
+            return $this->forwardToRoute(
+                'frontend.home.page',
+                [
+                    'loginError' => true,
+                    'errorSnippet' => $errorSnippet ?? null,
+                ]
+            );
+        }
 
         //Get access token
-        $accessToken = $this->getAccessToken($code,$provider);
-
+        
+        $accessToken = $this->getAccessToken($code,$provider,$request);
+        
+        if(isset($accessToken['error']))
+        {
+            $errorSnippet = $accessToken['error_description'] ;
+            $this->addFlash('danger',$errorSnippet);
+            return $this->forwardToRoute(
+                'frontend.home.page',
+                [
+                    'loginError' => true,
+                    'errorSnippet' => $errorSnippet ?? null,
+                ]
+            );
+        }
+        
         //Get resource owner details
-        $resourceOwner = $this->getResourceOwner($accessToken,$provider);
+        $resourceOwner = $this->getResourceOwner($accessToken,$provider,$request);
+        if(isset($resourceOwner['error']))
+        {
+            $errorSnippet = 'Error retrieving resource owner :'.$resourceOwner['error'] ;
+            $this->addFlash('danger',$errorSnippet);
+            return $this->forwardToRoute(
+                'frontend.home.page',
+                [
+                    'loginError' => true,
+                    'errorSnippet' => $errorSnippet ?? null,
+                ]
+            );
+        }
         $resourceOwner = $this->array_flatten($resourceOwner);
 
+        //Check whether all required fields are present
+        $requiredfields = ['salutation','billing_address_country','given_name','family_name','email','sw_cred','billing_address_street','billing_address_zipcode','billing_address_city'];
+            $errors = [];
+            foreach($requiredfields as $field)
+            {
+                if(!isset($resourceOwner[$field]) || empty($resourceOwner[$field]))
+                {
+                    array_push($errors,$field);
+                }
+            }
+            if(!empty($errors))
+            {
+                $errorlist="";
+                foreach($errors as $error)
+                {
+                    $errorlist.=$error." ";
+                }
+                $errormessage = "Error in registartion, ".count($errors)." fields are missing :".$errorlist;
+                $this->addFlash('danger',$errormessage);
+                return $this->forwardToRoute(
+                    'frontend.home.page',
+                    [
+                        'loginError' => true,
+                        'errorSnippet' => $errormessage ?? null,
+                    ]
+                );
+            }
+        
         //Search the db for user
         $this->customerRepository = $this->container->get('customer.repository');
         $entities = $this->customerRepository->search(
@@ -134,13 +224,23 @@ class CidaasController extends StorefrontController
 
         //If user not found then register
         if(empty($entity))
-        {  
-            $countries = $this->connection
-            ->executeQuery("SELECT country_id FROM country_translation WHERE name = '". $resourceOwner["billing_address_country"]. "' ")
-            ->fetchAll(FetchMode::COLUMN);
+        {
             
-            $salutationId = $this->connection->executeQuery("SELECT id FROM salutation WHERE  salutation_key  = '". $resourceOwner["salutation"]. "' ")->fetchAll(FetchMode::COLUMN);
-             $data = new RequestDataBag([ 
+            $queryBuilderCountry = $this->connection->createQueryBuilder();
+            $queryBuilderCountry->select('country_id')
+                ->from('country_translation')
+                ->where('name = :name')
+                ->setParameter('name', $resourceOwner['billing_address_country']);
+            $countries = $queryBuilderCountry->execute()->fetchAll(FetchMode::COLUMN);
+            $queryBuilderSalutation = $this->connection->createQueryBuilder();
+            $queryBuilderSalutation->select('id')
+                ->from('salutation')
+                ->where('salutation_key = :salutation_key')
+                ->setParameter('salutation_key', $resourceOwner['salutation']);
+
+            $salutationId = $queryBuilderSalutation->execute()->fetchAll(FetchMode::COLUMN);
+
+            $data = new RequestDataBag([
                 "guest" => false,
                 "salutationId" => Uuid::fromBytesToHex($salutationId[0]),
                 "firstName" => $resourceOwner['given_name'],
@@ -155,15 +255,29 @@ class CidaasController extends StorefrontController
                     "zipcode" => $resourceOwner['billing_address_zipcode'],
                     "city" => $resourceOwner['billing_address_city']
                 ),
-                "storefrontUrl" => getenv('APP_URL'),   
+                "storefrontUrl" => getenv('APP_URL'),
              ]);
-          $cust = $this->registerRoute->register($data, $context, true );
+        try{
+          $this->registerRoute->register($data, $context, true);
+         }
+         catch(ConstraintViolationException $formViolations)
+         {
+             $errorSnippet = $formViolations->getMessage();
+             $this->addFlash('danger','Error in Registration: '.$errorSnippet);
+                return $this->forwardToRoute(
+                    'frontend.home.page',
+                    [
+                        'loginError' => true,
+                        'errorSnippet' => $errorSnippet ?? null,
+                    ]
+                );
+         }
         }
-
+        
         //login the user
         $req = Request::create('/account/login','POST',['redirectTo'=>'frontend.account.home.page']);
         $data = new RequestDataBag(['username' => $resourceOwner['email'],'password'=> $password->{'sw_password'}]);
-        
+
         try {
             $token = $this->loginRoute->login($data, $context)->getToken();
             if (!empty($token)) {
@@ -175,6 +289,16 @@ class CidaasController extends StorefrontController
             }
         }
 
+        $data->set('password', null);
+        $this->addFlash('danger','Failed to login the user');
+        return $this->forwardToRoute(
+            'frontend.home.page',
+            [
+                'loginError' => true,
+                'errorSnippet' => $errorSnippet ?? null,
+            ]
+        );
+
     }
 
     /**
@@ -182,7 +306,7 @@ class CidaasController extends StorefrontController
      */
     public function logout(Request $request, SalesChannelContext $context)
     {
-        
+
 
         if ($context->getCustomer() === null) {
             return $this->redirectToRoute('frontend.home.page');
@@ -206,33 +330,38 @@ class CidaasController extends StorefrontController
     }
 
 
-    protected function getResourceOwner($token, $provider)
+    protected function getResourceOwner($token, $provider, $request)
     {
-     $userAgent = $_SERVER['HTTP_USER_AGENT'].' cidaas-sw-plugin/1.0.1';
-     $acceptlanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
-     $host = $_SERVER['HTTP_HOST'];
+     $userAgent = $request->headers->get('User-Agent').' cidaas-sw-plugin/1.0.1';
+     $acceptlanguage = $request->headers->get('Accept');
      $client = new Client();
+     //TODO:ERROR Handling we cannot expect to always receive a ressourceOwner, what happens with json_decode if not
+     try{
      $response = $client->get($provider['urlResourceOwnerDetails'],[
          'headers' => [
             'content_type' => 'application/json',
             'accept_language' => $acceptlanguage,
              'access_token' => $token['access_token'],
-             'user_agent' => $userAgent,
-             
+             'user_agent' => $userAgent
          ]
      ]);
+         }
+         catch(ClientException $e) {
+             $errormessage = json_decode($e->getResponse()->getBody()->getContents());
+             $error = (array) $errormessage;
+             return $error; 
+         }
      $responseBody = json_decode($response->getBody()->getContents(),true);
      return $responseBody;
     }
 
 
-    protected function getAccessToken($code, $provider)
-    { 
-     $userAgent = $_SERVER['HTTP_USER_AGENT'].' cidaas-sw-plugin/1.0.1';
-     $acceptlanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
-     $host = $_SERVER['HTTP_HOST'];
-     $client = new Client();
-     $response = $client->post($provider['urlAccessToken'],[
+    protected function getAccessToken($code, $provider,$request) {
+    $userAgent = $request->headers->get('User-Agent').' cidaas-sw-plugin/1.0.1';
+    $acceptlanguage = $request->headers->get('Accept');
+    $client = new Client();
+    try {
+    $response = $client->post($provider['urlAccessToken'],[
          'form_params' => [
              'grant_type' => 'authorization_code',
              'client_id' => $provider['clientId'],
@@ -244,15 +373,19 @@ class CidaasController extends StorefrontController
              'content_type' => 'application/json',
              'accept_language' => $acceptlanguage,
              'user_agent' => $userAgent,
-             
          ]
      ]);
-     $responseBody = json_decode($response->getBody()->getContents(),true);
-     return $responseBody;
+         }
+         catch (ClientException $e) {
+            $errormessage = json_decode($e->getResponse()->getBody()->getContents());
+            $error = (array) $errormessage;
+            return $error;
+        }
+        $responseBody = json_decode($response->getBody()->getContents(),true);
+        return $responseBody;
     }
 
-    protected function getProvider()
-    {
+    protected function getProvider() {
         $redirectUri = getenv('APP_URL').'/cidaas/redirect';
         $provider = [
             'clientId' => $this->systemConfig->get('CidaasOauthConnect.config.clientId'),
@@ -264,22 +397,20 @@ class CidaasController extends StorefrontController
             'scopes' => "openid email profile",
         ];
         return $provider;
-
     }
-    
 
 
-    protected function array_flatten($array, $prefix = '')
-    {
-    
-       $result = array();   
-         
+
+    protected function array_flatten($array, $prefix = '') {
+
+       $result = array();
+
     foreach($array as $key=>$value) {
-         
+
             if(is_array($value) && $key !== "roles") {
-                
+
                 $result = $result + $this->array_flatten($value);
-                
+
             }
             else {
                 $result[$key] = $value;
@@ -287,7 +418,16 @@ class CidaasController extends StorefrontController
         }
         return $result;
     }
-    
+
+    protected function generateRandomString($length = 10) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
 
 
 }
