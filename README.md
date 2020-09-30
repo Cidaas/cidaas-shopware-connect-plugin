@@ -1,6 +1,16 @@
 ## Plugin For cidaas oauth2 Connect in Shopware System
 
 **Note: This plugins only works with the Shopware Platform** (see: https://github.com/shopware/development)
+## Setup
+
+- Move plugin to custom/plugins
+- Run following commands to activate the plugin
+
+```bash
+bin/console plugin:update
+bin/console plugin:install --activate CidaasOauthConnect
+bin/console cache:clear
+```
 
 ## Installation Guide:
 1. Install & activate the plugin in Shopware Admin > settings > System > Plugins
